@@ -45,8 +45,6 @@
   <script>
     let countdown;
     let savedSeconds = 0;
-    
-    // Đợi bấm nút mới khởi tạo âm thanh để không bị trình duyệt "đánh sập"
     let audioCtx; 
     let selectedFemaleVoice = null;
 
@@ -67,27 +65,31 @@
     }
 
     function playBuzzer() {
-      if (!audioCtx) return;
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-      oscillator.type = 'sawtooth'; 
-      oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); 
-      oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); 
-      gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 1.2); 
+      try {
+        if (!audioCtx) return;
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        oscillator.type = 'sawtooth'; 
+        oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); 
+        oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); 
+        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 1.2); 
+      } catch (e) { console.log(e); }
     }
 
     function speak(text) {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel(); 
-      const msg = new SpeechSynthesisUtterance(text);
-      if (selectedFemaleVoice) msg.voice = selectedFemaleVoice;
-      else msg.lang = 'en-US';
-      window.speechSynthesis.speak(msg);
+      try {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel(); 
+        const msg = new SpeechSynthesisUtterance(text);
+        if (selectedFemaleVoice) msg.voice = selectedFemaleVoice;
+        else msg.lang = 'en-US';
+        window.speechSynthesis.speak(msg);
+      } catch (e) { console.log(e); }
     }
 
     function runTimer(seconds) {
@@ -101,10 +103,54 @@
 
         if (seconds === 5) speak("Five seconds left");
 
-       if (seconds <= 0) {
-          clearInterval(countdown); // Dừng bộ đếm
-          playBuzzer(); // Réo chuông BÈÈÈNG
-          setTimeout(() => speak("Time is up!"), 1500); // Chờ 1.5s chuông dứt rồi mới đọc
+        if (seconds <= 0) {
+          clearInterval(countdown);
+          playBuzzer();
+          setTimeout(() => speak("Time is up!"), 1500); 
         }
-      }, 1000); // Đóng của hàm setInterval
-    } // Đóng của hàm runTimer
+      }, 1000);
+    }
+
+    // --- PHẦN HÀM BỊ BẠN XÓA MẤT ĐÃ ĐƯỢC THÊM LẠI ---
+    function startTimer() {
+      let inputVal = parseInt(document.getElementById('timeInput').value);
+      if (!inputVal || inputVal <= 0) {
+        alert('Please enter a valid number!');
+        return;
+      }
+
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) audioCtx = new AudioContext();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+      
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      savedSeconds = inputVal; 
+      runTimer(savedSeconds);
+    }
+
+    function resetTimer() {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      clearInterval(countdown);
+      document.getElementById('timer').textContent = "00";
+      document.getElementById('timeInput').value = "";
+      savedSeconds = 0;
+    }
+
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
+    document.addEventListener('touchend', e => {
+      let touchEndX = e.changedTouches[0].screenX;
+      if (Math.abs(touchEndX - touchStartX) > 50) {
+        if (savedSeconds > 0) {
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+          runTimer(savedSeconds);
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
