@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Đếm Ngược Voice</title>
+  <title>Countdown Voice App</title>
   <style>
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -12,14 +12,14 @@
     }
     #timer { font-size: 15rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
     .controls { display: flex; gap: 10px; }
-    input { padding: 10px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; }
+    input { padding: 15px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; }
     button {
-      padding: 10px 20px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white;
+      padding: 10px 25px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white;
     }
-    .btn-start { background-color: #ff4757; }
-    .btn-start:hover { background-color: #ff6b81; }
-    .btn-reset { background-color: #747d8c; }
-    .btn-reset:hover { background-color: #a4b0be; }
+    .btn-start { background-color: #4cd137; } /* Đổi màu xanh cho tươi mới */
+    .btn-start:hover { background-color: #44bd32; }
+    .btn-reset { background-color: #7f8c8d; }
+    .btn-reset:hover { background-color: #95a5a6; }
   </style>
 </head>
 <body>
@@ -27,20 +27,22 @@
   <div id="timer">00</div>
   
   <div class="controls">
-    <input type="number" id="timeInput" placeholder="Nhập số giây..." min="1">
-    <button class="btn-start" onclick="startTimer()">Bắt đầu</button>
-    <button class="btn-reset" onclick="resetTimer()">Làm mới</button>
+    <input type="number" id="timeInput" placeholder="Seconds..." min="1">
+    <button class="btn-start" onclick="startTimer()">Start</button>
+    <button class="btn-reset" onclick="resetTimer()">Reset</button>
   </div>
 
   <script>
     let countdown;
     let savedSeconds = 0;
 
-    // Hàm để máy phát âm tiếng Việt
+    // Hàm phát âm tiếng Anh
     function speak(text) {
       const msg = new SpeechSynthesisUtterance();
       msg.text = text;
-      msg.lang = 'vi-VN'; // Đặt ngôn ngữ là tiếng Việt
+      msg.lang = 'en-US'; // Chuyển sang tiếng Anh Mỹ
+      msg.rate = 1;       // Tốc độ đọc (1 là bình thường)
+      msg.pitch = 1;      // Độ trầm bổng
       window.speechSynthesis.speak(msg);
     }
 
@@ -53,26 +55,24 @@
         seconds--;
         display.textContent = seconds;
 
-        // Thông báo khi còn đúng 5 giây
+        // Báo khi còn 5 giây
         if (seconds === 5) {
-          speak("Còn 5 giây");
+          speak("Five seconds left");
         }
 
         if (seconds <= 0) {
           clearInterval(countdown);
-          display.textContent = "HẾT GIỜ!";
-          speak("Hết giờ rồi bạn ơi"); // Câu thoại khi kết thúc
+          display.textContent = "TIME UP!";
+          speak("Time is up!"); 
         }
       }, 1000);
     }
 
     function startTimer() {
       let inputVal = document.getElementById('timeInput').value;
-      if (!inputVal || inputVal <= 0) return alert('Nhập số lớn hơn 0 nhé!');
+      if (!inputVal || inputVal <= 0) return alert('Please enter a valid number!');
       
-      // Hủy mọi câu nói đang dở dang trước khi bắt đầu mới
       window.speechSynthesis.cancel(); 
-      
       savedSeconds = inputVal; 
       runTimer(savedSeconds);
     }
@@ -85,7 +85,7 @@
       savedSeconds = 0;
     }
 
-    // XỬ LÝ VUỐT NGANG
+    // VUỐT NGANG ĐỂ RESTART
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
