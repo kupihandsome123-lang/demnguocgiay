@@ -101,4 +101,10 @@
 
         if (seconds === 5) speak("Five seconds left");
 
-        if (seconds <= 0) {
+       if (seconds <= 0) {
+          clearInterval(countdown); // Dừng bộ đếm
+          playBuzzer(); // Réo chuông BÈÈÈNG
+          setTimeout(() => speak("Time is up!"), 1500); // Chờ 1.5s chuông dứt rồi mới đọc
+        }
+      }, 1000); // Đóng của hàm setInterval
+    } // Đóng của hàm runTimer
