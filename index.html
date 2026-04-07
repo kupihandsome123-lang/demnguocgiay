@@ -10,14 +10,36 @@
       height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
       overflow: hidden;
     }
-    #timer { font-size: 15rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
-    .controls { display: flex; gap: 10px; }
-    input { padding: 15px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; outline: none; }
-    button {
-      padding: 10px 25px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white;
-      transition: transform 0.1s;
+    
+    #timer { 
+      font-size: 15rem; font-weight: bold; margin-bottom: 30px; color: #61dafb; 
+      line-height: 1;
     }
-    button:active { transform: scale(0.95); }
+
+    /* Outer container for input and buttons */
+    .controls-container {
+      display: flex; flex-direction: column; align-items: center; gap: 20px; /* Space between input and button group */
+    }
+
+    /* Styling for the Input field - now on top */
+    input { 
+      padding: 15px 20px; font-size: 1.5rem; width: 200px; text-align: center; 
+      border-radius: 12px; border: none; outline: none; background-color: rgba(255,255,255,0.9);
+      color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+    }
+
+    /* Container for buttons to keep them side-by-side */
+    .button-group { 
+      display: flex; gap: 15px; 
+    }
+
+    button {
+      padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; 
+      border-radius: 8px; font-weight: bold; color: white; text-transform: uppercase;
+      transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+    }
+    button:active { transform: scale(0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    
     .btn-start { background-color: #4cd137; }
     .btn-start:hover { background-color: #44bd32; }
     .btn-reset { background-color: #7f8c8d; }
@@ -28,114 +50,17 @@
 
   <div id="timer">00</div>
   
-  <div class="controls">
+  <div class="controls-container">
     <input type="number" id="timeInput" placeholder="Seconds..." min="1">
-    <button class="btn-start" onclick="startTimer()">Start</button>
-    <button class="btn-reset" onclick="resetTimer()">Reset</button>
+    
+    <div class="button-group">
+      <button class="btn-start" onclick="startTimer()">Start</button>
+      <button class="btn-reset" onclick="resetTimer()">Reset</button>
+    </div>
   </div>
 
   <script>
     let countdown;
     let savedSeconds = 0;
     
-    // Tự tạo bộ phát âm thanh (Web Audio API)
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-    function playBuzzer() {
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      
-      const oscillator = audioCtx.createOscillator();
-      const gainNode = audioCtx.createGain();
-
-      // Tạo sóng âm thanh kiểu "cưa" (sawtooth) để có tiếng rè rè giống buzzer
-      oscillator.type = 'sawtooth'; 
-      oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); // Âm trầm 100Hz
-      oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); // Rớt nhịp từ từ
-
-      // Chỉnh âm lượng to rồi nhỏ dần
-      gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioCtx.destination);
-
-      oscillator.start();
-      oscillator.stop(audioCtx.currentTime + 1.2); // Kêu trong 1.2 giây
-    }
-
-    function speak(text) {
-      window.speechSynthesis.cancel(); 
-      const msg = new SpeechSynthesisUtterance();
-      msg.text = text;
-      msg.lang = 'en-US';
-      window.speechSynthesis.speak(msg);
-    }
-
-    function runTimer(seconds) {
-      clearInterval(countdown);
-      const display = document.getElementById('timer');
-      display.textContent = seconds;
-
-      countdown = setInterval(() => {
-        seconds--;
-        display.textContent = seconds;
-
-        if (seconds === 5) {
-          speak("Five seconds left");
-        }
-
-        if (seconds <= 0) {
-          clearInterval(countdown);
-          
-          // 1. Chơi tiếng buzzer tự tạo
-          playBuzzer();
-          
-          // 2. Đợi 1.5 giây sau mới đọc chữ
-          setTimeout(() => {
-              speak("Time is up!");
-          }, 1500); 
-        }
-      }, 1000);
-    }
-
-    function startTimer() {
-      const inputField = document.getElementById('timeInput');
-      let inputVal = inputField.value;
-      
-      if (!inputVal || inputVal <= 0) {
-        alert('Please enter a valid number!');
-        return;
-      }
-      
-      // Khởi động Audio Context khi bấm nút (quy định của trình duyệt)
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      window.speechSynthesis.cancel();
-
-      savedSeconds = inputVal; 
-      runTimer(savedSeconds);
-    }
-
-    function resetTimer() {
-      window.speechSynthesis.cancel();
-      clearInterval(countdown);
-      document.getElementById('timer').textContent = "00";
-      document.getElementById('timeInput').value = "";
-      savedSeconds = 0;
-    }
-
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
-    document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screenX;
-      if (Math.abs(touchEndX - touchStartX) > 50) {
-        if (savedSeconds > 0) {
-          window.speechSynthesis.cancel();
-          if (audioCtx.state === 'suspended') audioCtx.resume();
-          runTimer(savedSeconds);
-        }
-      }
-    });
-  </script>
-
-</body>
-</html>
+    // Tự tạo bộ phát âm
