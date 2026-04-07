@@ -1,45 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Voice App</title>
-  <style>
-    body {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
-      overflow: hidden;
-    }
-    #timer { font-size: 15rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
-    .controls { display: flex; gap: 10px; }
-    input { padding: 15px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; outline: none; }
-    button {
-      padding: 10px 25px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white;
-      transition: transform 0.1s;
-    }
-    button:active { transform: scale(0.95); }
-    .btn-start { background-color: #4cd137; }
-    .btn-start:hover { background-color: #44bd32; }
-    .btn-reset { background-color: #7f8c8d; }
-    .btn-reset:hover { background-color: #95a5a6; }
-  </style>
-</head>
-<body>
-
-  <div id="timer">00</div>
-  
-  <div class="controls">
-    <input type="number" id="timeInput" placeholder="Seconds..." min="1">
-    <button class="btn-start" onclick="startTimer()">Start</button>
-    <button class="btn-reset" onclick="resetTimer()">Reset</button>
-  </div>
-
-  <script>
+<script>
     let countdown;
     let savedSeconds = 0;
     
-    // Đổi link sang tiếng buzzer trầm và dài hơn
-    const failSound = new Audio('https://www.myinstants.com/media/sounds/wrong-answer-bass-buzzer.mp3');
+    // Dùng link âm thanh của Google cho chắc cốp, không lo bị lỗi mạng chặn
+    const failSound = new Audio('https://actions.google.com/sounds/v1/alarms/buzzer_alarm.ogg');
 
     function speak(text) {
       window.speechSynthesis.cancel(); 
@@ -65,13 +29,14 @@
         if (seconds <= 0) {
           clearInterval(countdown);
           
-          // Phát tiếng chuông TRƯỚC
+          // Phát tiếng chuông
+          failSound.currentTime = 0;
           failSound.play();
           
-          // Đợi chuông kêu được 1 giây thì mới đọc chữ
+          // Đợi chuông kêu 1.5 giây thì đọc chữ
           setTimeout(() => {
               speak("Time is up!");
-          }, 1000); 
+          }, 1500); 
         }
       }, 1000);
     }
@@ -85,10 +50,13 @@
         return;
       }
       
-      window.speechSynthesis.cancel();
-      failSound.pause();
-      failSound.currentTime = 0; 
+      // CHIÊU MỞ KHÓA ÂM THANH CHO TRÌNH DUYỆT
+      failSound.play().then(() => {
+        failSound.pause();
+        failSound.currentTime = 0;
+      }).catch(err => console.log("Chưa mở khóa được âm thanh:", err));
 
+      window.speechSynthesis.cancel();
       savedSeconds = inputVal; 
       runTimer(savedSeconds);
     }
@@ -118,6 +86,3 @@
       }
     });
   </script>
-
-</body>
-</html>
