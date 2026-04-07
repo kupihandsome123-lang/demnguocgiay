@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>App Đếm Ngược</title>
+  <title>App Đếm Ngược Voice</title>
   <style>
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
-      overflow: hidden; /* Chống cuộn trang khi vuốt */
+      overflow: hidden;
     }
-    #timer { font-size: 20rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
+    #timer { font-size: 15rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
     .controls { display: flex; gap: 10px; }
     input { padding: 10px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; }
     button {
@@ -34,9 +34,16 @@
 
   <script>
     let countdown;
-    let savedSeconds = 0; // Lưu lại số giây để vuốt đếm lại
-    
-    // --- XỬ LÝ ĐỒNG HỒ ---
+    let savedSeconds = 0;
+
+    // Hàm để máy phát âm tiếng Việt
+    function speak(text) {
+      const msg = new SpeechSynthesisUtterance();
+      msg.text = text;
+      msg.lang = 'vi-VN'; // Đặt ngôn ngữ là tiếng Việt
+      window.speechSynthesis.speak(msg);
+    }
+
     function runTimer(seconds) {
       clearInterval(countdown);
       const display = document.getElementById('timer');
@@ -45,9 +52,16 @@
       countdown = setInterval(() => {
         seconds--;
         display.textContent = seconds;
+
+        // Thông báo khi còn đúng 5 giây
+        if (seconds === 5) {
+          speak("Còn 5 giây");
+        }
+
         if (seconds <= 0) {
           clearInterval(countdown);
-          display.textContent = "BÙM!";
+          display.textContent = "HẾT GIỜ!";
+          speak("Hết giờ rồi bạn ơi"); // Câu thoại khi kết thúc
         }
       }, 1000);
     }
@@ -55,30 +69,31 @@
     function startTimer() {
       let inputVal = document.getElementById('timeInput').value;
       if (!inputVal || inputVal <= 0) return alert('Nhập số lớn hơn 0 nhé!');
+      
+      // Hủy mọi câu nói đang dở dang trước khi bắt đầu mới
+      window.speechSynthesis.cancel(); 
+      
       savedSeconds = inputVal; 
       runTimer(savedSeconds);
     }
 
     function resetTimer() {
+      window.speechSynthesis.cancel();
       clearInterval(countdown);
       document.getElementById('timer').textContent = "00";
       document.getElementById('timeInput').value = "";
       savedSeconds = 0;
     }
 
-    // --- XỬ LÝ VUỐT NGANG (MOBILE) ---
+    // XỬ LÝ VUỐT NGANG
     let touchStartX = 0;
-
-    document.addEventListener('touchstart', e => {
-      touchStartX = e.changedTouches[0].screenX;
-    });
-
+    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
       let touchEndX = e.changedTouches[0].screenX;
-      // Nếu vuốt ngang qua trái hoặc phải hơn 50px
       if (Math.abs(touchEndX - touchStartX) > 50) {
         if (savedSeconds > 0) {
-          runTimer(savedSeconds); // Chạy lại đồng hồ
+          window.speechSynthesis.cancel();
+          runTimer(savedSeconds);
         }
       }
     });
