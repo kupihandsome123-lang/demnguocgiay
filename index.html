@@ -12,11 +12,13 @@
     }
     #timer { font-size: 15rem; font-weight: bold; margin-bottom: 20px; color: #61dafb; }
     .controls { display: flex; gap: 10px; }
-    input { padding: 15px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; }
+    input { padding: 15px; font-size: 1.2rem; width: 140px; text-align: center; border-radius: 8px; border: none; outline: none; }
     button {
       padding: 10px 25px; font-size: 1.2rem; cursor: pointer; border: none; border-radius: 8px; font-weight: bold; color: white;
+      transition: transform 0.1s;
     }
-    .btn-start { background-color: #4cd137; } /* Đổi màu xanh cho tươi mới */
+    button:active { transform: scale(0.95); }
+    .btn-start { background-color: #4cd137; }
     .btn-start:hover { background-color: #44bd32; }
     .btn-reset { background-color: #7f8c8d; }
     .btn-reset:hover { background-color: #95a5a6; }
@@ -36,13 +38,12 @@
     let countdown;
     let savedSeconds = 0;
 
-    // Hàm phát âm tiếng Anh
     function speak(text) {
+      // Hủy các câu nói cũ để tránh bị xếp hàng (đọc chồng chéo)
+      window.speechSynthesis.cancel(); 
       const msg = new SpeechSynthesisUtterance();
       msg.text = text;
-      msg.lang = 'en-US'; // Chuyển sang tiếng Anh Mỹ
-      msg.rate = 1;       // Tốc độ đọc (1 là bình thường)
-      msg.pitch = 1;      // Độ trầm bổng
+      msg.lang = 'en-US';
       window.speechSynthesis.speak(msg);
     }
 
@@ -55,22 +56,26 @@
         seconds--;
         display.textContent = seconds;
 
-        // Báo khi còn 5 giây
         if (seconds === 5) {
           speak("Five seconds left");
         }
 
         if (seconds <= 0) {
           clearInterval(countdown);
-          display.textContent = "TIME UP!";
-          speak("Time is up!"); 
+          speak("Time is up!");
+          // Không thay đổi display thành "TIME UP", giữ nguyên số 0
         }
       }, 1000);
     }
 
     function startTimer() {
-      let inputVal = document.getElementById('timeInput').value;
-      if (!inputVal || inputVal <= 0) return alert('Please enter a valid number!');
+      const inputField = document.getElementById('timeInput');
+      let inputVal = inputField.value;
+      
+      if (!inputVal || inputVal <= 0) {
+        alert('Please enter a valid number!');
+        return;
+      }
       
       window.speechSynthesis.cancel(); 
       savedSeconds = inputVal; 
@@ -85,14 +90,13 @@
       savedSeconds = 0;
     }
 
-    // VUỐT NGANG ĐỂ RESTART
+    // VUỐT NGANG ĐỂ RESTART (Sử dụng số giây đã nhập gần nhất)
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
       let touchEndX = e.changedTouches[0].screenX;
       if (Math.abs(touchEndX - touchStartX) > 50) {
         if (savedSeconds > 0) {
-          window.speechSynthesis.cancel();
           runTimer(savedSeconds);
         }
       }
