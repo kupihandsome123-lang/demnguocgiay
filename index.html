@@ -38,23 +38,14 @@
     let countdown;
     let savedSeconds = 0;
     
-    // Link tiếng chuông fail huyền thoại
-    const failSound = new Audio('https://www.myinstants.com/media/sounds/buzzer.mp3');
+    // Đổi link sang tiếng buzzer trầm và dài hơn
+    const failSound = new Audio('https://www.myinstants.com/media/sounds/wrong-answer-bass-buzzer.mp3');
 
-    // Thêm tham số playBuzzer để cờ lê điều khiển lúc nào nên kêu
-    function speak(text, playBuzzer = false) {
+    function speak(text) {
       window.speechSynthesis.cancel(); 
       const msg = new SpeechSynthesisUtterance();
       msg.text = text;
       msg.lang = 'en-US';
-      
-      // Bắt sự kiện khi đọc xong chữ
-      if (playBuzzer) {
-        msg.onend = () => {
-          failSound.play();
-        };
-      }
-      
       window.speechSynthesis.speak(msg);
     }
 
@@ -68,12 +59,19 @@
         display.textContent = seconds;
 
         if (seconds === 5) {
-          speak("Five seconds left"); // Không truyền playBuzzer nên không kêu
+          speak("Five seconds left");
         }
 
         if (seconds <= 0) {
           clearInterval(countdown);
-          speak("Time is up!", true); // Truyền true để nó chốt bằng quả fail cực mạnh!
+          
+          // Phát tiếng chuông TRƯỚC
+          failSound.play();
+          
+          // Đợi chuông kêu được 1 giây thì mới đọc chữ
+          setTimeout(() => {
+              speak("Time is up!");
+          }, 1000); 
         }
       }, 1000);
     }
@@ -88,7 +86,6 @@
       }
       
       window.speechSynthesis.cancel();
-      // Reset âm thanh lỡ nó đang kêu dở
       failSound.pause();
       failSound.currentTime = 0; 
 
@@ -110,18 +107,4 @@
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screenX;
-      if (Math.abs(touchEndX - touchStartX) > 50) {
-        if (savedSeconds > 0) {
-          // Vuốt thì cũng tắt luôn tiếng cũ nếu đang kêu
-          window.speechSynthesis.cancel();
-          failSound.pause();
-          failSound.currentTime = 0;
-          runTimer(savedSeconds);
-        }
-      }
-    });
-  </script>
-
-</body>
-</html>
+      let touchEndX = e.changedTouches[0].screen
