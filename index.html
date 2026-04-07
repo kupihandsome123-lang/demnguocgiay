@@ -10,36 +10,20 @@
       height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
       overflow: hidden;
     }
-    
-    #timer { 
-      font-size: 15rem; font-weight: bold; margin-bottom: 30px; color: #61dafb; 
-      line-height: 1;
-    }
-
-    /* Outer container for input and buttons */
-    .controls-container {
-      display: flex; flex-direction: column; align-items: center; gap: 20px; /* Space between input and button group */
-    }
-
-    /* Styling for the Input field - now on top */
+    #timer { font-size: 15rem; font-weight: bold; margin-bottom: 30px; color: #61dafb; line-height: 1; }
+    .controls-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
     input { 
       padding: 15px 20px; font-size: 1.5rem; width: 200px; text-align: center; 
       border-radius: 12px; border: none; outline: none; background-color: rgba(255,255,255,0.9);
       color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
     }
-
-    /* Container for buttons to keep them side-by-side */
-    .button-group { 
-      display: flex; gap: 15px; 
-    }
-
+    .button-group { display: flex; gap: 15px; }
     button {
       padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; 
       border-radius: 8px; font-weight: bold; color: white; text-transform: uppercase;
       transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
     button:active { transform: scale(0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    
     .btn-start { background-color: #4cd137; }
     .btn-start:hover { background-color: #44bd32; }
     .btn-reset { background-color: #7f8c8d; }
@@ -52,7 +36,6 @@
   
   <div class="controls-container">
     <input type="number" id="timeInput" placeholder="Seconds..." min="1">
-    
     <div class="button-group">
       <button class="btn-start" onclick="startTimer()">Start</button>
       <button class="btn-reset" onclick="resetTimer()">Reset</button>
@@ -63,4 +46,59 @@
     let countdown;
     let savedSeconds = 0;
     
-    // Tự tạo bộ phát âm
+    // Đợi bấm nút mới khởi tạo âm thanh để không bị trình duyệt "đánh sập"
+    let audioCtx; 
+    let selectedFemaleVoice = null;
+
+    function loadVoices() {
+      if (!window.speechSynthesis) return;
+      let voices = window.speechSynthesis.getVoices();
+      selectedFemaleVoice = voices.find(voice => 
+        voice.lang.includes('en') && 
+        (voice.name.includes('Samantha') || voice.name.includes('Victoria') || voice.name.includes('Female') || voice.name.includes('Google US English'))
+      ) || voices.find(voice => voice.lang.includes('en'));
+    }
+
+    if (window.speechSynthesis) {
+      if (window.speechSynthesis.onvoiceschanged !== undefined) {
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+      }
+      loadVoices();
+    }
+
+    function playBuzzer() {
+      if (!audioCtx) return;
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      oscillator.type = 'sawtooth'; 
+      oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); 
+      oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); 
+      gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 1.2); 
+    }
+
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel(); 
+      const msg = new SpeechSynthesisUtterance(text);
+      if (selectedFemaleVoice) msg.voice = selectedFemaleVoice;
+      else msg.lang = 'en-US';
+      window.speechSynthesis.speak(msg);
+    }
+
+    function runTimer(seconds) {
+      clearInterval(countdown);
+      const display = document.getElementById('timer');
+      display.textContent = seconds;
+
+      countdown = setInterval(() => {
+        seconds--;
+        display.textContent = seconds;
+
+        if (seconds === 5) speak("Five seconds left");
+
+        if (seconds <= 0) {
