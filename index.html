@@ -38,8 +38,30 @@
     let countdown;
     let savedSeconds = 0;
     
-    // Đổi về MP3 để 100% các máy đều đọc được
-    const failSound = new Audio('https://www.myinstants.com/media/sounds/wrong-answer-bass-buzzer.mp3');
+    // Tự tạo bộ phát âm thanh (Web Audio API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    function playBuzzer() {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+
+      // Tạo sóng âm thanh kiểu "cưa" (sawtooth) để có tiếng rè rè giống buzzer
+      oscillator.type = 'sawtooth'; 
+      oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); // Âm trầm 100Hz
+      oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); // Rớt nhịp từ từ
+
+      // Chỉnh âm lượng to rồi nhỏ dần
+      gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+
+      oscillator.start();
+      oscillator.stop(audioCtx.currentTime + 1.2); // Kêu trong 1.2 giây
+    }
 
     function speak(text) {
       window.speechSynthesis.cancel(); 
@@ -65,9 +87,10 @@
         if (seconds <= 0) {
           clearInterval(countdown);
           
-          failSound.currentTime = 0;
-          failSound.play();
+          // 1. Chơi tiếng buzzer tự tạo
+          playBuzzer();
           
+          // 2. Đợi 1.5 giây sau mới đọc chữ
           setTimeout(() => {
               speak("Time is up!");
           }, 1500); 
@@ -84,17 +107,8 @@
         return;
       }
       
-      // CHIÊU MỞ KHÓA ÂM THANH MẠNH NHẤT
-      failSound.muted = true; // Tạm tắt tiếng để lừa trình duyệt cho phép chạy
-      failSound.play().then(() => {
-        failSound.pause();
-        failSound.muted = false; // Mở tiếng lại
-        failSound.currentTime = 0;
-      }).catch(e => console.log("Lỗi âm thanh:", e));
-
-      // Mở khóa giọng nói luôn
-      let unlockSpeech = new SpeechSynthesisUtterance('');
-      window.speechSynthesis.speak(unlockSpeech);
+      // Khởi động Audio Context khi bấm nút (quy định của trình duyệt)
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       window.speechSynthesis.cancel();
 
       savedSeconds = inputVal; 
@@ -103,9 +117,6 @@
 
     function resetTimer() {
       window.speechSynthesis.cancel();
-      failSound.pause();
-      failSound.currentTime = 0;
-      
       clearInterval(countdown);
       document.getElementById('timer').textContent = "00";
       document.getElementById('timeInput').value = "";
@@ -119,8 +130,7 @@
       if (Math.abs(touchEndX - touchStartX) > 50) {
         if (savedSeconds > 0) {
           window.speechSynthesis.cancel();
-          failSound.pause();
-          failSound.currentTime = 0;
+          if (audioCtx.state === 'suspended') audioCtx.resume();
           runTimer(savedSeconds);
         }
       }
