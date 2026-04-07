@@ -38,8 +38,8 @@
     let countdown;
     let savedSeconds = 0;
     
-    // Link âm thanh của Google (chuông to, rõ, không bị chặn)
-    const failSound = new Audio('https://actions.google.com/sounds/v1/alarms/buzzer_alarm.ogg');
+    // Đổi về MP3 để 100% các máy đều đọc được
+    const failSound = new Audio('https://www.myinstants.com/media/sounds/wrong-answer-bass-buzzer.mp3');
 
     function speak(text) {
       window.speechSynthesis.cancel(); 
@@ -65,11 +65,9 @@
         if (seconds <= 0) {
           clearInterval(countdown);
           
-          // Phát tiếng chuông trước
           failSound.currentTime = 0;
           failSound.play();
           
-          // Đợi chuông kêu 1.5 giây thì đọc chữ
           setTimeout(() => {
               speak("Time is up!");
           }, 1500); 
@@ -86,13 +84,19 @@
         return;
       }
       
-      // Mở khóa âm thanh cho trình duyệt
+      // CHIÊU MỞ KHÓA ÂM THANH MẠNH NHẤT
+      failSound.muted = true; // Tạm tắt tiếng để lừa trình duyệt cho phép chạy
       failSound.play().then(() => {
         failSound.pause();
+        failSound.muted = false; // Mở tiếng lại
         failSound.currentTime = 0;
-      }).catch(err => console.log("Lỗi âm thanh:", err));
+      }).catch(e => console.log("Lỗi âm thanh:", e));
 
+      // Mở khóa giọng nói luôn
+      let unlockSpeech = new SpeechSynthesisUtterance('');
+      window.speechSynthesis.speak(unlockSpeech);
       window.speechSynthesis.cancel();
+
       savedSeconds = inputVal; 
       runTimer(savedSeconds);
     }
