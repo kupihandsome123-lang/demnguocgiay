@@ -107,4 +107,17 @@
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screen
+      let touchEndX = e.changedTouches[0].screenX;
+      if (Math.abs(touchEndX - touchStartX) > 50) {
+        if (savedSeconds > 0) {
+          window.speechSynthesis.cancel();
+          failSound.pause();
+          failSound.currentTime = 0;
+          runTimer(savedSeconds);
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
