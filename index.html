@@ -10,7 +10,6 @@
       height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
       overflow: hidden;
     }
-    /* Chỉnh số to đùng tự động theo màn hình (30vw) và thêm hiệu ứng mờ dần (transition) */
     #timer { 
       font-size: 30vw; 
       font-weight: bold; 
@@ -18,6 +17,15 @@
       color: #61dafb; 
       line-height: 1; 
       transition: opacity 0.2s;
+      display: flex; /* Dùng flex để canh chân chữ bằng nhau */
+      align-items: baseline;
+      justify-content: center;
+    }
+    /* CSS cho số phần trăm giây (nhỏ hơn và nhạt màu hơn một chút) */
+    .ms {
+      font-size: 0.4em; 
+      color: #8892b0; 
+      margin-left: 10px;
     }
     .controls-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
     input { 
@@ -40,7 +48,9 @@
 </head>
 <body>
 
-  <div id="timer" onclick="togglePause()" style="cursor: pointer;" title="Bấm để Dừng/Chạy tiếp">00</div>
+  <div id="timer" onclick="togglePause()" style="cursor: pointer;" title="Bấm để Dừng/Chạy tiếp">
+    00<span class="ms">00</span>
+  </div>
   
   <div class="controls-container">
     <input type="number" id="timeInput" placeholder="Seconds..." min="1">
@@ -56,9 +66,10 @@
     let audioCtx; 
     let selectedFemaleVoice = null;
     
-    // Biến cho tính năng Tạm dừng
-    let currentRemainingTime = 0;
+    // Biến lưu thời gian bằng mili-giây
+    let currentRemainingMs = 0;
     let isPaused = false;
+    let lastSpokenSecond = -1; // Để không bị đọc 5 giây liên tục
 
     function loadVoices() {
       if (!window.speechSynthesis) return;
@@ -104,29 +115,46 @@
       } catch (e) { console.log(e); }
     }
 
-    function runTimer(seconds) {
+    function updateDisplay(sec, ms) {
+      // Đảm bảo số phần trăm giây luôn có 2 chữ số (VD: 05, 09, 12)
+      let msString = ms < 10 ? "0" + ms : ms;
+      document.getElementById('timer').innerHTML = `${sec}<span class="ms">${msString}</span>`;
+    }
+
+    function runTimer(totalMs) {
       clearInterval(countdown);
-      const display = document.getElementById('timer');
-      display.textContent = seconds;
-      currentRemainingTime = seconds;
+      let endTime = Date.now() + totalMs;
 
       countdown = setInterval(() => {
-        seconds--;
-        currentRemainingTime = seconds; 
-        display.textContent = seconds;
-
-        if (seconds === 5) speak("Five seconds left");
-
-        if (seconds <= 0) {
+        let remaining = endTime - Date.now();
+        
+        if (remaining <= 0) {
           clearInterval(countdown);
+          currentRemainingMs = 0;
+          updateDisplay(0, 0);
           playBuzzer();
           setTimeout(() => speak("Time is up!"), 1500); 
+          return;
         }
-      }, 1000);
+
+        currentRemainingMs = remaining;
+        
+        // Tính toán số giây và phần trăm giây
+        let sec = Math.floor(remaining / 1000);
+        let ms = Math.floor((remaining % 1000) / 10); 
+        
+        updateDisplay(sec, ms);
+
+        // Tránh gọi hàm đọc liên tục khi số giây = 5
+        if (sec === 5 && lastSpokenSecond !== 5) {
+          speak("Five seconds left");
+          lastSpokenSecond = 5;
+        }
+      }, 10); // Cập nhật siêu tốc mỗi 10 mili-giây
     }
 
     function togglePause() {
-      if (currentRemainingTime <= 0) return; 
+      if (currentRemainingMs <= 0) return; 
       
       const display = document.getElementById('timer');
       if (!isPaused) {
@@ -137,7 +165,7 @@
       } else {
         isPaused = false;
         display.style.opacity = "1"; 
-        runTimer(currentRemainingTime);
+        runTimer(currentRemainingMs); // Chạy tiếp số mili-giây đang dang dở
       }
     }
 
@@ -158,29 +186,33 @@
       
       savedSeconds = inputVal; 
       isPaused = false; 
+      lastSpokenSecond = -1; // Reset trạng thái đọc
       document.getElementById('timer').style.opacity = "1"; 
-      runTimer(savedSeconds);
+      
+      // Chuyển giây thành mili-giây
+      runTimer(savedSeconds * 1000); 
     }
 
     function resetTimer() {
       if (window.speechSynthesis) window.speechSynthesis.cancel();
       clearInterval(countdown);
-      document.getElementById('timer').textContent = "00";
+      document.getElementById('timer').innerHTML = '00<span class="ms">00</span>';
       document.getElementById('timeInput').value = "";
       document.getElementById('timer').style.opacity = "1"; 
       savedSeconds = 0;
-      currentRemainingTime = 0;
+      currentRemainingMs = 0;
       isPaused = false;
+      lastSpokenSecond = -1;
     }
 
-    // Xử lý vuốt màn hình cho đồng bộ với Tạm dừng/Chạy tiếp
+    // Xử lý vuốt màn hình
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
       let touchEndX = e.changedTouches[0].screenX;
       if (Math.abs(touchEndX - touchStartX) > 50) {
-        if (currentRemainingTime > 0 && isPaused) {
-           togglePause(); // Nếu đang dừng mà vuốt thì chạy tiếp luôn
+        if (currentRemainingMs > 0 && isPaused) {
+           togglePause(); 
         }
       }
     });
