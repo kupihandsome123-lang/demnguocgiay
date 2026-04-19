@@ -1,222 +1,94 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Voice App</title>
+  <title>Countdown Voice App - New UI</title>
   <style>
+    :root {
+      --bg-color: #0d111c;
+      --text-color: #f8f8f8;
+      --accent-color: #f7b731; /* Màu vàng từ hình 1 */
+      --danger-color: #ff1744; /* Màu hồng từ hình 2 */
+      --control-bg: #1a1f30;
+      --control-text: #b8c1ec;
+      --font-family: sans-serif;
+    }
+
     body {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
-      overflow: hidden;
+      height: 100vh; margin: 0;
+      background: radial-gradient(circle at center, #1a233b 0%, #0d111c 100%);
+      color: var(--text-color); font-family: var(--font-family);
+      overflow: hidden; user-select: none;
     }
-    #timer { 
-      font-size: 30vw; 
-      font-weight: bold; 
-      margin-bottom: 30px; 
-      color: #61dafb; 
-      line-height: 1; 
-      transition: opacity 0.2s;
-      display: flex; /* Dùng flex để canh chân chữ bằng nhau */
-      align-items: baseline;
-      justify-content: center;
+
+    /* Vòng đếm ngược (SVG Circular Progress) */
+    .timer-container {
+      position: relative; width: 300px; height: 300px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 50px;
     }
-    /* CSS cho số phần trăm giây (nhỏ hơn và nhạt màu hơn một chút) */
-    .ms {
-      font-size: 0.4em; 
-      color: #8892b0; 
-      margin-left: 10px;
+
+    .svg-timer {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      transform: rotate(-90deg); /* Bắt đầu từ đỉnh 12h */
     }
-    .controls-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
-    input { 
-      padding: 15px 20px; font-size: 1.5rem; width: 200px; text-align: center; 
-      border-radius: 12px; border: none; outline: none; background-color: rgba(255,255,255,0.9);
-      color: #333; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+
+    /* Vòng tròn cơ sở (xám) */
+    .timer-circle-bg {
+      fill: none; stroke: #2d344d; stroke-width: 15;
     }
-    .button-group { display: flex; gap: 15px; }
+
+    /* Vòng tròn tiến trình (vàng/hồng) */
+    .timer-circle-progress {
+      fill: none; stroke: var(--accent-color); stroke-width: 15;
+      stroke-linecap: round; /* Bo góc đầu dòng */
+      transition: stroke-dashoffset 0.1s linear, stroke 0.3s ease, opacity 0.3s ease;
+      stroke-dasharray: 753.98; /* Chu vi = 2 * PI * r (r=120) */
+      stroke-dashoffset: 753.98; /* Bắt đầu với offset đầy */
+    }
+
+    /* Số đếm ngược lớn ở trung tâm */
+    #timer {
+      font-size: 150px; font-weight: bold; color: var(--text-color);
+      line-height: 1; transition: opacity 0.3s ease, transform 0.1s;
+    }
+
+    /* Phần trăm giây nhỏ bên phải */
+    .ms-small {
+      font-size: 40px; color: #8892b0;
+      vertical-align: super; margin-left: 5px; opacity: 0.7;
+    }
+
+    /* Phần controls: label, input, button */
+    .controls-container {
+      display: flex; flex-direction: column; align-items: center; gap: 20px;
+      width: 100%; max-width: 400px;
+    }
+
+    .label-container {
+      font-size: 16px; color: var(--control-text);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+
+    #timeInput {
+      width: 100%; padding: 25px; font-size: 32px; text-align: center;
+      border-radius: 20px; border: 2px solid #2d344d; outline: none;
+      background-color: var(--control-bg); color: var(--text-color);
+      transition: border-color 0.3s, background-color 0.3s;
+      box-shadow: inset 0 4px 6px rgba(0,0,0,0.4);
+    }
+    #timeInput:focus { border-color: var(--accent-color); background-color: #242942; }
+    #timeInput:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .button-group { display: flex; gap: 20px; width: 100%; margin-top: 10px; }
+
     button {
-      padding: 12px 30px; font-size: 1.2rem; cursor: pointer; border: none; 
-      border-radius: 8px; font-weight: bold; color: white; text-transform: uppercase;
-      transition: transform 0.1s, box-shadow 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+      flex: 1; padding: 25px 0; font-size: 20px; cursor: pointer; border: none;
+      border-radius: 20px; font-weight: bold;
+      transition: transform 0.1s, opacity 0.2s, background-color 0.3s;
+      box-shadow: 0 6px 10px rgba(0,0,0,0.3);
+      text-transform: uppercase; letter-spacing: 1px;
     }
-    button:active { transform: scale(0.95); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .btn-start { background-color: #4cd137; }
-    .btn-start:hover { background-color: #44bd32; }
-    .btn-reset { background-color: #7f8c8d; }
-    .btn-reset:hover { background-color: #95a5a6; }
-  </style>
-</head>
-<body>
-
-  <div id="timer" onclick="togglePause()" style="cursor: pointer;" title="Bấm để Dừng/Chạy tiếp">
-    00<span class="ms">00</span>
-  </div>
-  
-  <div class="controls-container">
-    <input type="number" id="timeInput" placeholder="Seconds..." min="1">
-    <div class="button-group">
-      <button class="btn-start" onclick="startTimer()">Start</button>
-      <button class="btn-reset" onclick="resetTimer()">Reset</button>
-    </div>
-  </div>
-
-  <script>
-    let countdown;
-    let savedSeconds = 0;
-    let audioCtx; 
-    let selectedFemaleVoice = null;
-    
-    // Biến lưu thời gian bằng mili-giây
-    let currentRemainingMs = 0;
-    let isPaused = false;
-    let lastSpokenSecond = -1; // Để không bị đọc 5 giây liên tục
-
-    function loadVoices() {
-      if (!window.speechSynthesis) return;
-      let voices = window.speechSynthesis.getVoices();
-      selectedFemaleVoice = voices.find(voice => 
-        voice.lang.includes('en') && 
-        (voice.name.includes('Samantha') || voice.name.includes('Victoria') || voice.name.includes('Female') || voice.name.includes('Google US English'))
-      ) || voices.find(voice => voice.lang.includes('en'));
-    }
-
-    if (window.speechSynthesis) {
-      if (window.speechSynthesis.onvoiceschanged !== undefined) {
-        window.speechSynthesis.onvoiceschanged = loadVoices;
-      }
-      loadVoices();
-    }
-
-    function playBuzzer() {
-      try {
-        if (!audioCtx) return;
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        oscillator.type = 'sawtooth'; 
-        oscillator.frequency.setValueAtTime(100, audioCtx.currentTime); 
-        oscillator.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2); 
-        gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 1.2); 
-      } catch (e) { console.log(e); }
-    }
-
-    function speak(text) {
-      try {
-        if (!window.speechSynthesis) return;
-        window.speechSynthesis.cancel(); 
-        const msg = new SpeechSynthesisUtterance(text);
-        if (selectedFemaleVoice) msg.voice = selectedFemaleVoice;
-        else msg.lang = 'en-US';
-        window.speechSynthesis.speak(msg);
-      } catch (e) { console.log(e); }
-    }
-
-    function updateDisplay(sec, ms) {
-      // Đảm bảo số phần trăm giây luôn có 2 chữ số (VD: 05, 09, 12)
-      let msString = ms < 10 ? "0" + ms : ms;
-      document.getElementById('timer').innerHTML = `${sec}<span class="ms">${msString}</span>`;
-    }
-
-    function runTimer(totalMs) {
-      clearInterval(countdown);
-      let endTime = Date.now() + totalMs;
-
-      countdown = setInterval(() => {
-        let remaining = endTime - Date.now();
-        
-        if (remaining <= 0) {
-          clearInterval(countdown);
-          currentRemainingMs = 0;
-          updateDisplay(0, 0);
-          playBuzzer();
-          setTimeout(() => speak("Time is up!"), 1500); 
-          return;
-        }
-
-        currentRemainingMs = remaining;
-        
-        // Tính toán số giây và phần trăm giây
-        let sec = Math.floor(remaining / 1000);
-        let ms = Math.floor((remaining % 1000) / 10); 
-        
-        updateDisplay(sec, ms);
-
-        // Tránh gọi hàm đọc liên tục khi số giây = 5
-        if (sec === 5 && lastSpokenSecond !== 5) {
-          speak("Five seconds left");
-          lastSpokenSecond = 5;
-        }
-      }, 10); // Cập nhật siêu tốc mỗi 10 mili-giây
-    }
-
-    function togglePause() {
-      if (currentRemainingMs <= 0) return; 
-      
-      const display = document.getElementById('timer');
-      if (!isPaused) {
-        clearInterval(countdown);
-        isPaused = true;
-        display.style.opacity = "0.4"; 
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-      } else {
-        isPaused = false;
-        display.style.opacity = "1"; 
-        runTimer(currentRemainingMs); // Chạy tiếp số mili-giây đang dang dở
-      }
-    }
-
-    function startTimer() {
-      let inputVal = parseInt(document.getElementById('timeInput').value);
-      if (!inputVal || inputVal <= 0) {
-        alert('Please enter a valid number!');
-        return;
-      }
-
-      if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) audioCtx = new AudioContext();
-      }
-      if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-      
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      
-      savedSeconds = inputVal; 
-      isPaused = false; 
-      lastSpokenSecond = -1; // Reset trạng thái đọc
-      document.getElementById('timer').style.opacity = "1"; 
-      
-      // Chuyển giây thành mili-giây
-      runTimer(savedSeconds * 1000); 
-    }
-
-    function resetTimer() {
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
-      clearInterval(countdown);
-      document.getElementById('timer').innerHTML = '00<span class="ms">00</span>';
-      document.getElementById('timeInput').value = "";
-      document.getElementById('timer').style.opacity = "1"; 
-      savedSeconds = 0;
-      currentRemainingMs = 0;
-      isPaused = false;
-      lastSpokenSecond = -1;
-    }
-
-    // Xử lý vuốt màn hình
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
-    document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screenX;
-      if (Math.abs(touchEndX - touchStartX) > 50) {
-        if (currentRemainingMs > 0 && isPaused) {
-           togglePause(); 
-        }
-      }
-    });
-  </script>
-
-</body>
-</html>
+    button:active { transform: scale(0.96); box-
