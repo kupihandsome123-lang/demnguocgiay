@@ -10,7 +10,15 @@
       height: 100vh; margin: 0; background-color: #282c34; color: white; font-family: sans-serif;
       overflow: hidden;
     }
-    #timer { font-size: 40rem; font-weight: bold; margin-bottom: 30px; color: #61dafb; line-height: 1; }
+    /* Chỉnh số to đùng tự động theo màn hình (30vw) và thêm hiệu ứng mờ dần (transition) */
+    #timer { 
+      font-size: 30vw; 
+      font-weight: bold; 
+      margin-bottom: 30px; 
+      color: #61dafb; 
+      line-height: 1; 
+      transition: opacity 0.2s;
+    }
     .controls-container { display: flex; flex-direction: column; align-items: center; gap: 20px; }
     input { 
       padding: 15px 20px; font-size: 1.5rem; width: 200px; text-align: center; 
@@ -47,6 +55,10 @@
     let savedSeconds = 0;
     let audioCtx; 
     let selectedFemaleVoice = null;
+    
+    // Biến cho tính năng Tạm dừng
+    let currentRemainingTime = 0;
+    let isPaused = false;
 
     function loadVoices() {
       if (!window.speechSynthesis) return;
@@ -96,9 +108,11 @@
       clearInterval(countdown);
       const display = document.getElementById('timer');
       display.textContent = seconds;
+      currentRemainingTime = seconds;
 
       countdown = setInterval(() => {
         seconds--;
+        currentRemainingTime = seconds; 
         display.textContent = seconds;
 
         if (seconds === 5) speak("Five seconds left");
@@ -111,7 +125,22 @@
       }, 1000);
     }
 
-    // --- PHẦN HÀM BỊ BẠN XÓA MẤT ĐÃ ĐƯỢC THÊM LẠI ---
+    function togglePause() {
+      if (currentRemainingTime <= 0) return; 
+      
+      const display = document.getElementById('timer');
+      if (!isPaused) {
+        clearInterval(countdown);
+        isPaused = true;
+        display.style.opacity = "0.4"; 
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      } else {
+        isPaused = false;
+        display.style.opacity = "1"; 
+        runTimer(currentRemainingTime);
+      }
+    }
+
     function startTimer() {
       let inputVal = parseInt(document.getElementById('timeInput').value);
       if (!inputVal || inputVal <= 0) {
@@ -126,7 +155,10 @@
       if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
       
       if (window.speechSynthesis) window.speechSynthesis.cancel();
+      
       savedSeconds = inputVal; 
+      isPaused = false; 
+      document.getElementById('timer').style.opacity = "1"; 
       runTimer(savedSeconds);
     }
 
@@ -135,18 +167,20 @@
       clearInterval(countdown);
       document.getElementById('timer').textContent = "00";
       document.getElementById('timeInput').value = "";
+      document.getElementById('timer').style.opacity = "1"; 
       savedSeconds = 0;
+      currentRemainingTime = 0;
+      isPaused = false;
     }
 
+    // Xử lý vuốt màn hình cho đồng bộ với Tạm dừng/Chạy tiếp
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; });
     document.addEventListener('touchend', e => {
       let touchEndX = e.changedTouches[0].screenX;
       if (Math.abs(touchEndX - touchStartX) > 50) {
-        if (savedSeconds > 0) {
-          if (window.speechSynthesis) window.speechSynthesis.cancel();
-          if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-          runTimer(savedSeconds);
+        if (currentRemainingTime > 0 && isPaused) {
+           togglePause(); // Nếu đang dừng mà vuốt thì chạy tiếp luôn
         }
       }
     });
