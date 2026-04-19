@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro - Max Size</title>
+  <title>Countdown Pro - Max Size & Swipe</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -12,24 +12,22 @@
       color: white; overflow: hidden;
     }
     .app-container {
-      display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 450px; /* Tăng form to ra */
+      display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 450px;
     }
     
-    /* Vòng tròn tiến trình (Đã tăng kích thước thêm ~30px) */
     .circle-wrapper {
       position: relative; width: 290px; height: 290px; margin-bottom: 50px; cursor: pointer;
       transition: opacity 0.3s;
     }
     .circle-wrapper:active { transform: scale(0.98); }
     svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-    .bg-circle { fill: none; stroke: #1e2235; stroke-width: 14; } /* Dày hơn 1 chút cho cân đối */
+    .bg-circle { fill: none; stroke: #1e2235; stroke-width: 14; }
     .progress-circle {
       fill: none; stroke: #eebb4d; stroke-width: 14; stroke-linecap: round;
-      stroke-dasharray: 817; stroke-dashoffset: 0; /* Đã cập nhật chu vi mới */
+      stroke-dasharray: 817; stroke-dashoffset: 0; 
       transition: stroke-dashoffset 0.1s linear;
     }
     
-    /* Khu vực hiển thị số */
     .timer-text {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: flex; justify-content: center; align-items: center;
@@ -37,42 +35,38 @@
     }
     
     #secDisplay {
-      font-size: 8.5rem; /* To hơn rõ rệt */
+      font-size: 8.5rem; 
       font-weight: bold;
       line-height: 1;
       transform: translateY(-5px);
     }
 
     #msDisplay {
-      font-size: 2.8rem; /* To hơn tỷ lệ thuận */
+      font-size: 2.8rem; 
       font-weight: 600;
       color: #a0a5b5; 
       margin-left: 8px;
-      transform: translateY(22px); /* Canh lại chân số */
+      transform: translateY(22px);
     }
 
-    /* Khu vực Input */
     .input-group {
       display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; width: 85%;
     }
     .input-label {
-      font-size: 1rem; /* To hơn */
-      font-weight: bold; color: #a0a5b5; margin-bottom: 12px; letter-spacing: 1px;
+      font-size: 1rem; font-weight: bold; color: #a0a5b5; margin-bottom: 12px; letter-spacing: 1px;
     }
     input[type="number"] {
       width: 100%; padding: 20px; background-color: #1e2235; border: 1px solid #2d3246;
-      border-radius: 14px; color: white; font-size: 2rem; /* Số nhập vào to hơn */
-      text-align: center; font-weight: bold;
+      border-radius: 14px; color: white; font-size: 2rem; text-align: center; font-weight: bold;
       outline: none; box-sizing: border-box; transition: opacity 0.3s;
     }
     input[type="number"]:disabled { opacity: 0.5; }
 
-    /* Khu vực Buttons */
     .button-group {
       display: flex; gap: 20px; width: 85%; justify-content: space-between;
     }
     button {
-      flex: 1; padding: 20px 0; border: none; border-radius: 14px; font-size: 1.2rem; /* Nút và chữ to hơn */
+      flex: 1; padding: 20px 0; border: none; border-radius: 14px; font-size: 1.2rem;
       font-weight: bold; cursor: pointer; transition: all 0.2s; color: white;
     }
     button:active { transform: scale(0.95); }
@@ -116,7 +110,6 @@
     const mainBtn = document.getElementById('mainBtn');
     const circleWrapper = document.querySelector('.circle-wrapper');
     
-    // Đã cập nhật chu vi với bán kính mới là 130
     const circumference = 2 * Math.PI * 130;
     circle.style.strokeDasharray = circumference;
 
@@ -276,6 +269,23 @@
       updateInitialDisplay();
       circle.style.strokeDashoffset = 0;
     }
+
+    // --- TÍNH NĂNG VUỐT ĐỂ CHẠY TIẾP ĐÃ ĐƯỢC PHỤC HỒI ---
+    let touchStartX = 0;
+    document.addEventListener('touchstart', e => { 
+      touchStartX = e.changedTouches[0].screenX; 
+    }, {passive: true});
+    
+    document.addEventListener('touchend', e => {
+      let touchEndX = e.changedTouches[0].screenX;
+      // Nếu vuốt ngang dài hơn 50px
+      if (Math.abs(touchEndX - touchStartX) > 50) {
+        // Nếu đồng hồ đang tạm dừng và vẫn còn thời gian -> Chạy tiếp
+        if (hasStarted && currentMs > 0 && !isRunning) {
+           startTimer();
+        }
+      }
+    });
 
     updateInitialDisplay();
   </script>
