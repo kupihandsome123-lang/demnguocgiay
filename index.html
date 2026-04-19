@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro</title>
+  <title>Countdown Pro - Milliseconds</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -29,11 +29,26 @@
       transition: stroke-dashoffset 0.1s linear;
     }
     
-    /* Số đếm ở giữa */
+    /* Khu vực hiển thị số */
     .timer-text {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: flex; justify-content: center; align-items: center;
-      font-size: 6rem; font-weight: bold; color: #f9f5e8;
+      color: #f9f5e8;
+    }
+    
+    #secDisplay {
+      font-size: 6.5rem; 
+      font-weight: bold;
+      line-height: 1;
+      transform: translateY(-5px);
+    }
+
+    #msDisplay {
+      font-size: 2.2rem; 
+      font-weight: 600;
+      color: #a0a5b5; 
+      margin-left: 5px;
+      transform: translateY(18px); /* Canh ngang chân số giây */
     }
 
     /* Khu vực Input */
@@ -74,12 +89,15 @@
         <circle class="bg-circle" cx="125" cy="125" r="115"></circle>
         <circle class="progress-circle" id="progress" cx="125" cy="125" r="115"></circle>
       </svg>
-      <div class="timer-text" id="display">0</div>
+      <div class="timer-text">
+        <span id="secDisplay">10</span>
+        <span id="msDisplay">00</span>
+      </div>
     </div>
 
     <div class="input-group">
       <div class="input-label">ĐẶT THỜI GIAN (GIÂY)</div>
-      <input type="number" id="timeInput" value="10" min="1">
+      <input type="number" id="timeInput" value="10" min="1" oninput="updateInitialDisplay()">
     </div>
 
     <div class="button-group">
@@ -90,12 +108,12 @@
 
   <script>
     const circle = document.getElementById('progress');
-    const display = document.getElementById('display');
+    const secDisplay = document.getElementById('secDisplay');
+    const msDisplay = document.getElementById('msDisplay');
     const input = document.getElementById('timeInput');
     const mainBtn = document.getElementById('mainBtn');
     const circleWrapper = document.querySelector('.circle-wrapper');
     
-    // Chu vi vòng tròn (2 * PI * r) với r=115
     const circumference = 2 * Math.PI * 115;
     circle.style.strokeDasharray = circumference;
 
@@ -108,7 +126,6 @@
     let audioCtx;
     let selectedFemaleVoice = null;
 
-    // --- CÀI ĐẶT GIỌNG NÓI & ÂM THANH ---
     function loadVoices() {
       if (!window.speechSynthesis) return;
       let voices = window.speechSynthesis.getVoices();
@@ -143,18 +160,25 @@
       } catch (e) { console.log("Audio Error:", e); }
     }
 
-    // --- LOGIC ĐỒNG HỒ ---
-    function updateUI() {
-      // Cập nhật số (hiển thị giây chẵn)
-      let secondsLeft = Math.ceil(currentMs / 1000);
-      display.textContent = secondsLeft;
+    function updateInitialDisplay() {
+      if (!hasStarted) {
+        let val = parseInt(input.value) || 0;
+        secDisplay.textContent = val.toString().padStart(2, '0');
+        msDisplay.textContent = "00";
+      }
+    }
 
-      // Cập nhật vòng tròn
+    function updateUI() {
+      let secondsLeft = Math.floor(currentMs / 1000);
+      let hundredths = Math.floor((currentMs % 1000) / 10);
+      
+      secDisplay.textContent = secondsLeft.toString().padStart(2, '0');
+      msDisplay.textContent = hundredths.toString().padStart(2, '0');
+
       let percentage = currentMs / totalMs;
       if (totalMs === 0) percentage = 0;
       circle.style.strokeDashoffset = circumference - (percentage * circumference);
 
-      // Đọc báo giờ
       if (secondsLeft === 5 && lastSpokenSecond !== 5 && currentMs > 0) {
         speak("Five seconds left");
         lastSpokenSecond = 5;
@@ -175,7 +199,6 @@
       hasStarted = true;
       input.disabled = true;
       
-      // Đổi nút thành Tạm Dừng
       mainBtn.textContent = "TẠM DỪNG";
       mainBtn.className = "btn-pause";
       circleWrapper.style.opacity = "1";
@@ -194,7 +217,6 @@
           playBuzzer();
           setTimeout(() => speak("Time is up!"), 1000);
           
-          // Trả nút về Bắt Đầu
           mainBtn.textContent = "BẮT ĐẦU";
           mainBtn.className = "btn-start";
           hasStarted = false;
@@ -208,32 +230,26 @@
     function stopTimer() {
       clearInterval(timerInterval);
       isRunning = false;
-      mainBtn.textContent = "TIẾP TỤC"; // Hoặc giữ BẮT ĐẦU tuỳ bạn
+      mainBtn.textContent = "TIẾP TỤC"; 
       mainBtn.className = "btn-start";
-      circleWrapper.style.opacity = "0.4"; // Làm mờ khi tạm dừng
+      circleWrapper.style.opacity = "0.4"; 
       if (window.speechSynthesis) window.speechSynthesis.cancel();
     }
 
-    // Xử lý nút chính (Bắt đầu / Tạm dừng / Tiếp tục)
     function handleMainAction() {
       let val = parseInt(input.value);
       if (isNaN(val) || val <= 0) return alert("Vui lòng nhập số hợp lệ!");
 
       if (!hasStarted) {
-        // Bắt đầu mới hoàn toàn
         totalMs = val * 1000;
         currentMs = totalMs;
         lastSpokenSecond = -1;
       }
 
-      if (isRunning) {
-        stopTimer();
-      } else {
-        startTimer();
-      }
+      if (isRunning) stopTimer();
+      else startTimer();
     }
 
-    // Bấm vào vòng tròn để play/pause
     function toggleTimer() {
       if (hasStarted && currentMs > 0) {
         if (isRunning) stopTimer();
@@ -254,11 +270,11 @@
       mainBtn.className = "btn-start";
       circleWrapper.style.opacity = "1";
       
-      updateUI();
+      updateInitialDisplay();
+      circle.style.strokeDashoffset = 0;
     }
 
-    // Khởi tạo ban đầu
-    display.textContent = input.value;
+    updateInitialDisplay();
   </script>
 </body>
 </html>
