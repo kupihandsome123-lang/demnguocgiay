@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Swipe to Restart</title>
+  <title>Countdown Pro - Quick Control</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -12,169 +12,115 @@
       color: white; overflow: hidden; touch-action: none;
     }
     
-    /* Menu Phút ở góc phải */
+    /* Menu Điều khiển nhanh góc phải */
     .top-menu {
       position: absolute; top: 20px; right: 20px;
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(30, 34, 53, 0.8);
-      padding: 8px 12px; border-radius: 12px;
-      border: 1px solid #2d3246;
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(30, 34, 53, 0.9);
+      padding: 10px 15px; border-radius: 16px;
+      border: 1px solid #3d445d;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
     }
-    .top-menu label { font-size: 14px; color: #a0a5b5; font-weight: bold; }
-    .top-menu input {
-      background: transparent; border: none; color: #eebb4d;
-      font-size: 24px; width: 40px; text-align: center;
-      font-weight: bold; outline: none;
+    .top-menu label { font-size: 12px; color: #a0a5b5; font-weight: bold; margin-right: -5px; }
+    
+    .btn-qty {
+      background: #2d3246; border: none; color: white;
+      width: 32px; height: 32px; border-radius: 8px;
+      font-size: 18px; font-weight: bold; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.2s;
+    }
+    .btn-qty:active { background: #eebb4d; color: #111; }
+
+    #minDisplayVal {
+      font-size: 22px; width: 35px; text-align: center;
+      font-weight: bold; color: #eebb4d;
     }
 
+    .btn-quick-start {
+      background: #eebb4d; border: none; color: #111;
+      padding: 8px 15px; border-radius: 8px;
+      font-size: 13px; font-weight: 800; cursor: pointer;
+      text-transform: uppercase; margin-left: 5px;
+    }
+    .btn-quick-start.running { background: #c22955; color: white; }
+
+    /* Nội dung chính */
     .app-container {
       display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px;
     }
     
-    .circle-wrapper {
-      position: relative; width: 354px; height: 354px; margin-bottom: 40px; cursor: pointer;
-      transition: opacity 0.3s, transform 0.1s;
-    }
-    .circle-wrapper:active { transform: scale(0.96); }
-    
-    svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-    .bg-circle { fill: none; stroke: #1e2235; stroke-width: 16; }
-    .progress-circle {
-      fill: none; stroke: #eebb4d; stroke-width: 16; stroke-linecap: round;
-      stroke-dasharray: 1036; stroke-dashoffset: 0; 
-      transition: stroke-dashoffset 0.1s linear;
+    .timer-area {
+      text-align: center; margin-bottom: 50px; cursor: pointer;
     }
     
-    .timer-text {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      display: flex; justify-content: center; align-items: center;
-      color: #f9f5e8; pointer-events: none;
-    }
-    
-    #secDisplay {
-      font-size: 8rem; /* Giảm nhẹ để vừa định dạng 00:00 */
-      font-weight: bold; line-height: 1; transform: translateY(-5px);
+    #timeDisplay {
+      font-size: 10rem; font-weight: 800; line-height: 1; color: #f9f5e8;
+      font-variant-numeric: tabular-nums;
     }
 
     #msDisplay {
-      font-size: 2.5rem; font-weight: 600; color: #a0a5b5; 
-      margin-left: 8px; transform: translateY(22px);
-    }
-
-    .input-group {
-      display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; width: 80%;
-    }
-    .input-label {
-      font-size: 0.9rem; font-weight: bold; color: #a0a5b5; margin-bottom: 10px; letter-spacing: 1px;
-    }
-    input[type="number"]::-webkit-inner-spin-button { display: none; }
-    #timeInput {
-      width: 100%; padding: 15px; background-color: #1e2235; border: 1px solid #2d3246;
-      border-radius: 14px; color: white; font-size: 1.8rem; text-align: center; font-weight: bold;
-      outline: none; box-sizing: border-box; transition: opacity 0.3s;
+      font-size: 3rem; font-weight: 600; color: #626a80; 
+      margin-top: 10px; display: block;
     }
 
     .button-group {
-      display: flex; gap: 15px; width: 80%; justify-content: space-between;
+      display: flex; gap: 15px; width: 80%;
     }
-    button {
-      flex: 1; padding: 18px 0; border: none; border-radius: 14px; font-size: 1.1rem;
-      font-weight: bold; cursor: pointer; transition: all 0.2s; color: white;
+    .btn-reset {
+      flex: 1; padding: 18px; background: #1e2235; border: 1px solid #2d3246;
+      border-radius: 14px; color: #a0a5b5; font-size: 1.1rem; font-weight: bold;
+      cursor: pointer; transition: 0.2s;
     }
-    button:active { transform: scale(0.95); }
-    
-    .btn-start { background: linear-gradient(135deg, #f5c453, #d99e32); color: #111; }
-    .btn-pause { background: #c22955; }
-    .btn-reset { background-color: #1e2235; border: 1px solid #2d3246; }
+    .btn-reset:active { transform: scale(0.95); background: #2d3246; }
+
+    /* Trạng thái mờ khi dừng */
+    .is-paused { opacity: 0.5; transition: 0.3s; }
   </style>
 </head>
 <body>
 
   <div class="top-menu">
     <label>MIN</label>
-    <input type="number" id="minInput" value="0" min="0" max="99" oninput="updateInitialDisplay()">
+    <button class="btn-qty" onclick="changeMin(-1)">−</button>
+    <span id="minDisplayVal">1</span>
+    <button class="btn-qty" onclick="changeMin(1)">+</button>
+    <button id="quickStartBtn" class="btn-quick-start" onclick="handleMainAction()">Start</button>
   </div>
 
   <div class="app-container">
-    <div class="circle-wrapper" onclick="toggleTimer()" id="touchArea">
-      <svg viewBox="0 0 354 354">
-        <circle class="bg-circle" cx="177" cy="177" r="165"></circle>
-        <circle class="progress-circle" id="progress" cx="177" cy="177" r="165"></circle>
-      </svg>
-      <div class="timer-text">
-        <span id="secDisplay">00:10</span>
-        <span id="msDisplay">00</span>
-      </div>
-    </div>
-
-    <div class="input-group">
-      <div class="input-label">GIÂY</div>
-      <input type="number" id="timeInput" value="10" min="0" max="59" oninput="updateInitialDisplay()">
+    <div class="timer-area" id="displayArea" onclick="toggleTimer()">
+      <div id="timeDisplay">01:00</div>
+      <div id="msDisplay">00</div>
     </div>
 
     <div class="button-group">
-      <button id="mainBtn" class="btn-start" onclick="handleMainAction()">BẮT ĐẦU</button>
-      <button class="btn-reset" onclick="resetApp()">ĐẶT LẠI</button>
+      <button class="btn-reset" onclick="resetApp()">ĐẶT LẠI (RESET)</button>
     </div>
   </div>
 
   <script>
-    const circle = document.getElementById('progress');
-    const secDisplay = document.getElementById('secDisplay');
+    const timeDisplay = document.getElementById('timeDisplay');
     const msDisplay = document.getElementById('msDisplay');
-    const inputSec = document.getElementById('timeInput');
-    const inputMin = document.getElementById('minInput');
-    const mainBtn = document.getElementById('mainBtn');
-    const circleWrapper = document.getElementById('touchArea');
-    
-    const circumference = 2 * Math.PI * 165;
-    circle.style.strokeDasharray = circumference;
+    const minValText = document.getElementById('minDisplayVal');
+    const quickStartBtn = document.getElementById('quickStartBtn');
+    const displayArea = document.getElementById('displayArea');
 
-    let totalMs = 0, currentMs = 0, timerInterval = null;
-    let isRunning = false, hasStarted = false, lastSpokenSecond = -1;
-    let audioCtx, selectedFemaleVoice = null;
+    let setMin = 1; 
+    let currentMs = 60000;
+    let timerInterval = null;
+    let isRunning = false;
+    let hasStarted = false;
+    let audioCtx;
 
-    function loadVoices() {
-      if (!window.speechSynthesis) return;
-      let voices = window.speechSynthesis.getVoices();
-      selectedFemaleVoice = voices.find(v => v.lang.includes('en') && (v.name.includes('Samantha') || v.name.includes('Google US'))) || voices.find(v => v.lang.includes('en'));
-    }
-    if (window.speechSynthesis) {
-      window.speechSynthesis.onvoiceschanged = loadVoices;
-      loadVoices();
-    }
-
-    function speak(text) {
-      if (!window.speechSynthesis) return;
-      window.speechSynthesis.cancel();
-      const msg = new SpeechSynthesisUtterance(text);
-      if (selectedFemaleVoice) msg.voice = selectedFemaleVoice;
-      window.speechSynthesis.speak(msg);
-    }
-
-    function playBuzzer() {
-      try {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(100, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 1.2);
-        gain.gain.setValueAtTime(1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 1.2);
-      } catch (e) { console.log(e); }
-    }
-
-    function updateInitialDisplay() {
+    // Thay đổi số phút
+    function changeMin(val) {
+      if (isRunning) return;
+      setMin = Math.max(0, setMin + val);
+      minValText.textContent = setMin;
       if (!hasStarted) {
-        let m = parseInt(inputMin.value) || 0;
-        let s = parseInt(inputSec.value) || 0;
-        secDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        msDisplay.textContent = "00";
-        circle.style.strokeDashoffset = 0;
+        currentMs = setMin * 60 * 1000;
+        updateUI();
       }
     }
 
@@ -182,117 +128,94 @@
       let totalSeconds = Math.floor(currentMs / 1000);
       let m = Math.floor(totalSeconds / 60);
       let s = totalSeconds % 60;
-      let hundredths = Math.floor((currentMs % 1000) / 10);
+      let ms = Math.floor((currentMs % 1000) / 10);
       
-      secDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-      msDisplay.textContent = hundredths.toString().padStart(2, '0');
+      timeDisplay.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      msDisplay.textContent = ms.toString().padStart(2, '0');
+    }
 
-      let percentage = currentMs / totalMs;
-      circle.style.strokeDashoffset = circumference - (percentage * circumference);
-
-      if (totalSeconds === 5 && lastSpokenSecond !== 5 && isRunning) {
-        speak("Five seconds left");
-        lastSpokenSecond = 5;
+    function handleMainAction() {
+      if (!hasStarted) {
+        currentMs = setMin * 60 * 1000;
+        if (currentMs <= 0) return;
+        hasStarted = true;
       }
+      isRunning ? stopTimer() : startTimer();
     }
 
     function startTimer() {
-      if (currentMs <= 0) return;
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      
       isRunning = true;
-      hasStarted = true;
-      inputSec.disabled = inputMin.disabled = true;
-      
-      mainBtn.textContent = "TẠM DỪNG";
-      mainBtn.className = "btn-pause";
-      circleWrapper.style.opacity = "1";
+      quickStartBtn.textContent = "Stop";
+      quickStartBtn.classList.add('running');
+      displayArea.classList.remove('is-paused');
 
       let lastTime = Date.now();
       timerInterval = setInterval(() => {
         let now = Date.now();
-        let delta = now - lastTime;
+        currentMs -= (now - lastTime);
         lastTime = now;
-        currentMs -= delta;
 
         if (currentMs <= 0) {
           currentMs = 0;
           finishTimer();
-        } else {
-          updateUI();
         }
+        updateUI();
       }, 10);
-    }
-
-    function finishTimer() {
-      clearInterval(timerInterval);
-      isRunning = false;
-      updateUI();
-      playBuzzer();
-      setTimeout(() => speak("Time is up!"), 500);
-      mainBtn.textContent = "BẮT ĐẦU";
-      mainBtn.className = "btn-start";
-      hasStarted = false;
-      inputSec.disabled = inputMin.disabled = false;
     }
 
     function stopTimer() {
       clearInterval(timerInterval);
       isRunning = false;
-      mainBtn.textContent = "TIẾP TỤC"; 
-      mainBtn.className = "btn-start";
-      circleWrapper.style.opacity = "0.5";
+      quickStartBtn.textContent = "Start";
+      quickStartBtn.classList.remove('running');
+      displayArea.classList.add('is-paused');
     }
 
-    function handleMainAction() {
-      if (!hasStarted) {
-        let m = parseInt(inputMin.value) || 0;
-        let s = parseInt(inputSec.value) || 0;
-        totalMs = (m * 60 + s) * 1000;
-        if (totalMs <= 0) return alert("Vui lòng nhập thời gian!");
-        currentMs = totalMs;
-        lastSpokenSecond = -1;
-      }
-
-      if (isRunning) stopTimer();
-      else startTimer();
-    }
-
-    function toggleTimer() {
-      if (hasStarted && currentMs > 0) {
-        if (isRunning) stopTimer();
-        else startTimer();
-      }
-    }
-
-    function resetApp() {
+    function finishTimer() {
       clearInterval(timerInterval);
       isRunning = false;
       hasStarted = false;
-      inputSec.disabled = inputMin.disabled = false;
-      mainBtn.textContent = "BẮT ĐẦU";
-      mainBtn.className = "btn-start";
-      circleWrapper.style.opacity = "1";
-      updateInitialDisplay();
+      quickStartBtn.textContent = "Start";
+      quickStartBtn.classList.remove('running');
+      playBuzzer();
+    }
+
+    function resetApp() {
+      stopTimer();
+      hasStarted = false;
+      currentMs = setMin * 60 * 1000;
+      displayArea.classList.remove('is-paused');
+      updateUI();
+    }
+
+    function toggleTimer() {
+      if (hasStarted) isRunning ? stopTimer() : startTimer();
+    }
+
+    function playBuzzer() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 1);
+      } catch (e) {}
     }
 
     // VUỐT ĐỂ RESTART
-    let startX, startY;
-    document.addEventListener('touchstart', e => {
-      startX = e.touches[0].clientX;
-      startY = e.touches[0].clientY;
-    }, {passive: true});
-
+    let startY;
+    document.addEventListener('touchstart', e => startY = e.touches[0].clientY, {passive: true});
     document.addEventListener('touchend', e => {
-      let diffX = Math.abs(e.changedTouches[0].clientX - startX);
-      let diffY = Math.abs(e.changedTouches[0].clientY - startY);
-      if (diffX > 50 || diffY > 50) {
+      if (Math.abs(e.changedTouches[0].clientY - startY) > 60) {
         resetApp();
-        handleMainAction(); // Tự chạy luôn cho máu
+        handleMainAction();
       }
     });
 
-    updateInitialDisplay();
+    updateUI();
   </script>
 </body>
 </html>
