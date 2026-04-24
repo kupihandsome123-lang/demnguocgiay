@@ -3,70 +3,73 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro - Max Size & Swipe</title>
+  <title>Countdown Pro Max - Swipe to Restart</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
       background: radial-gradient(circle, #24273d 0%, #11121a 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      color: white; overflow: hidden;
+      color: white; overflow: hidden; touch-action: none; /* Ngăn cuộn trang để vuốt mượt hơn */
     }
     .app-container {
-      display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 450px;
+      display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px;
     }
     
+    /* Tăng kích thước thêm 64px: 290 + 64 = 354px */
     .circle-wrapper {
-      position: relative; width: 290px; height: 290px; margin-bottom: 50px; cursor: pointer;
-      transition: opacity 0.3s;
+      position: relative; width: 354px; height: 354px; margin-bottom: 40px; cursor: pointer;
+      transition: opacity 0.3s, transform 0.1s;
     }
-    .circle-wrapper:active { transform: scale(0.98); }
+    .circle-wrapper:active { transform: scale(0.96); }
+    
     svg { transform: rotate(-90deg); width: 100%; height: 100%; }
-    .bg-circle { fill: none; stroke: #1e2235; stroke-width: 14; }
+    .bg-circle { fill: none; stroke: #1e2235; stroke-width: 16; }
     .progress-circle {
-      fill: none; stroke: #eebb4d; stroke-width: 14; stroke-linecap: round;
-      stroke-dasharray: 817; stroke-dashoffset: 0; 
+      fill: none; stroke: #eebb4d; stroke-width: 16; stroke-linecap: round;
+      /* Circumference cho bán kính 165 là ~1036 */
+      stroke-dasharray: 1036; stroke-dashoffset: 0; 
       transition: stroke-dashoffset 0.1s linear;
     }
     
     .timer-text {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       display: flex; justify-content: center; align-items: center;
-      color: #f9f5e8;
+      color: #f9f5e8; pointer-events: none;
     }
     
     #secDisplay {
-      font-size: 8.5rem; 
+      font-size: 10rem; /* Tăng cỡ chữ cho xứng với vòng tròn mới */
       font-weight: bold;
       line-height: 1;
       transform: translateY(-5px);
     }
 
     #msDisplay {
-      font-size: 2.8rem; 
+      font-size: 3.2rem; 
       font-weight: 600;
       color: #a0a5b5; 
-      margin-left: 8px;
-      transform: translateY(22px);
+      margin-left: 10px;
+      transform: translateY(28px);
     }
 
     .input-group {
-      display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; width: 85%;
+      display: flex; flex-direction: column; align-items: center; margin-bottom: 30px; width: 80%;
     }
     .input-label {
-      font-size: 1rem; font-weight: bold; color: #a0a5b5; margin-bottom: 12px; letter-spacing: 1px;
+      font-size: 0.9rem; font-weight: bold; color: #a0a5b5; margin-bottom: 10px; letter-spacing: 1px;
     }
     input[type="number"] {
-      width: 100%; padding: 20px; background-color: #1e2235; border: 1px solid #2d3246;
-      border-radius: 14px; color: white; font-size: 2rem; text-align: center; font-weight: bold;
+      width: 100%; padding: 15px; background-color: #1e2235; border: 1px solid #2d3246;
+      border-radius: 14px; color: white; font-size: 1.8rem; text-align: center; font-weight: bold;
       outline: none; box-sizing: border-box; transition: opacity 0.3s;
     }
     input[type="number"]:disabled { opacity: 0.5; }
 
     .button-group {
-      display: flex; gap: 20px; width: 85%; justify-content: space-between;
+      display: flex; gap: 15px; width: 80%; justify-content: space-between;
     }
     button {
-      flex: 1; padding: 20px 0; border: none; border-radius: 14px; font-size: 1.2rem;
+      flex: 1; padding: 18px 0; border: none; border-radius: 14px; font-size: 1.1rem;
       font-weight: bold; cursor: pointer; transition: all 0.2s; color: white;
     }
     button:active { transform: scale(0.95); }
@@ -74,16 +77,15 @@
     .btn-start { background: linear-gradient(135deg, #f5c453, #d99e32); color: #111; }
     .btn-pause { background: #c22955; }
     .btn-reset { background-color: #1e2235; border: 1px solid #2d3246; }
-    .btn-reset:hover { background-color: #2d3246; }
   </style>
 </head>
 <body>
 
   <div class="app-container">
-    <div class="circle-wrapper" onclick="toggleTimer()" title="Bấm để Dừng/Chạy tiếp">
-      <svg viewBox="0 0 290 290">
-        <circle class="bg-circle" cx="145" cy="145" r="130"></circle>
-        <circle class="progress-circle" id="progress" cx="145" cy="145" r="130"></circle>
+    <div class="circle-wrapper" onclick="toggleTimer()" id="touchArea">
+      <svg viewBox="0 0 354 354">
+        <circle class="bg-circle" cx="177" cy="177" r="165"></circle>
+        <circle class="progress-circle" id="progress" cx="177" cy="177" r="165"></circle>
       </svg>
       <div class="timer-text">
         <span id="secDisplay">10</span>
@@ -92,7 +94,7 @@
     </div>
 
     <div class="input-group">
-      <div class="input-label">ĐẶT THỜI GIAN (GIÂY)</div>
+      <div class="input-label">THỜI GIAN ĐÃ CÀI (GIÂY)</div>
       <input type="number" id="timeInput" value="10" min="1" oninput="updateInitialDisplay()">
     </div>
 
@@ -108,9 +110,10 @@
     const msDisplay = document.getElementById('msDisplay');
     const input = document.getElementById('timeInput');
     const mainBtn = document.getElementById('mainBtn');
-    const circleWrapper = document.querySelector('.circle-wrapper');
+    const circleWrapper = document.getElementById('touchArea');
     
-    const circumference = 2 * Math.PI * 130;
+    // Chu vi mới cho r=165: 2 * PI * 165 = 1036.7
+    const circumference = 2 * Math.PI * 165;
     circle.style.strokeDasharray = circumference;
 
     let totalMs = 0;
@@ -161,6 +164,7 @@
         let val = parseInt(input.value) || 0;
         secDisplay.textContent = val.toString().padStart(2, '0');
         msDisplay.textContent = "00";
+        circle.style.strokeDashoffset = 0;
       }
     }
 
@@ -172,24 +176,18 @@
       msDisplay.textContent = hundredths.toString().padStart(2, '0');
 
       let percentage = currentMs / totalMs;
-      if (totalMs === 0) percentage = 0;
       circle.style.strokeDashoffset = circumference - (percentage * circumference);
 
-      if (secondsLeft === 5 && lastSpokenSecond !== 5 && currentMs > 0) {
+      if (secondsLeft === 5 && lastSpokenSecond !== 5 && isRunning) {
         speak("Five seconds left");
         lastSpokenSecond = 5;
       }
     }
 
-    function initAudioContext() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
     function startTimer() {
       if (currentMs <= 0) return;
-      initAudioContext();
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
       
       isRunning = true;
       hasStarted = true;
@@ -208,19 +206,23 @@
 
         if (currentMs <= 0) {
           currentMs = 0;
-          stopTimer();
-          updateUI();
-          playBuzzer();
-          setTimeout(() => speak("Time is up!"), 1000);
-          
-          mainBtn.textContent = "BẮT ĐẦU";
-          mainBtn.className = "btn-start";
-          hasStarted = false;
-          input.disabled = false;
+          finishTimer();
         } else {
           updateUI();
         }
       }, 10);
+    }
+
+    function finishTimer() {
+      clearInterval(timerInterval);
+      isRunning = false;
+      updateUI();
+      playBuzzer();
+      setTimeout(() => speak("Time is up!"), 500);
+      mainBtn.textContent = "BẮT ĐẦU";
+      mainBtn.className = "btn-start";
+      hasStarted = false;
+      input.disabled = false;
     }
 
     function stopTimer() {
@@ -228,13 +230,12 @@
       isRunning = false;
       mainBtn.textContent = "TIẾP TỤC"; 
       mainBtn.className = "btn-start";
-      circleWrapper.style.opacity = "0.4"; 
-      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      circleWrapper.style.opacity = "0.5";
     }
 
     function handleMainAction() {
       let val = parseInt(input.value);
-      if (isNaN(val) || val <= 0) return alert("Vui lòng nhập số hợp lệ!");
+      if (isNaN(val) || val <= 0) return alert("Vui lòng nhập số!");
 
       if (!hasStarted) {
         totalMs = val * 1000;
@@ -254,36 +255,38 @@
     }
 
     function resetApp() {
-      stopTimer();
+      clearInterval(timerInterval);
+      isRunning = false;
+      hasStarted = false;
       let val = parseInt(input.value) || 10;
       totalMs = val * 1000;
       currentMs = totalMs;
-      hasStarted = false;
       lastSpokenSecond = -1;
-      
       input.disabled = false;
       mainBtn.textContent = "BẮT ĐẦU";
       mainBtn.className = "btn-start";
       circleWrapper.style.opacity = "1";
-      
-      updateInitialDisplay();
-      circle.style.strokeDashoffset = 0;
+      updateUI();
     }
 
-    // --- TÍNH NĂNG VUỐT ĐỂ CHẠY TIẾP ĐÃ ĐƯỢC PHỤC HỒI ---
-    let touchStartX = 0;
-    document.addEventListener('touchstart', e => { 
-      touchStartX = e.changedTouches[0].screenX; 
+    // --- XỬ LÝ VUỐT ĐA HƯỚNG ĐỂ RESTART ---
+    let startX, startY;
+    document.addEventListener('touchstart', e => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
     }, {passive: true});
-    
+
     document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screenX;
-      // Nếu vuốt ngang dài hơn 50px
-      if (Math.abs(touchEndX - touchStartX) > 50) {
-        // Nếu đồng hồ đang tạm dừng và vẫn còn thời gian -> Chạy tiếp
-        if (hasStarted && currentMs > 0 && !isRunning) {
-           startTimer();
-        }
+      let endX = e.changedTouches[0].clientX;
+      let endY = e.changedTouches[0].clientY;
+      
+      let diffX = Math.abs(endX - startX);
+      let diffY = Math.abs(endY - startY);
+      
+      // Nếu vuốt bất kỳ hướng nào (X hoặc Y) vượt quá 50px
+      if (diffX > 50 || diffY > 50) {
+        resetApp();    // Đưa về số giây đã cài
+        startTimer();  // Tự động đếm ngược luôn
       }
     });
 
