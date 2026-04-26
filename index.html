@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Fixed UI</title>
+  <title>Countdown Pro Max - Poker Levels</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -11,74 +11,89 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       color: white; overflow: hidden; touch-action: none;
     }
+
+    /* --- BẢNG LEVEL POKER GÓC TRÊN TRÁI --- */
+    .level-panel {
+      position: absolute; top: 20px; left: 20px;
+      background: rgba(30, 34, 53, 0.85);
+      padding: 10px; border-radius: 12px;
+      border: 1px solid #2d3246; z-index: 30;
+      max-height: 300px; /* Giới hạn chiều cao */
+      overflow-y: auto;  /* Cho phép cuộn */
+      width: 220px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    }
     
-    /* --- PHẦN CHỈNH SỬA UI TOP-MENU --- */
+    /* Tùy chỉnh thanh cuộn cho bảng */
+    .level-panel::-webkit-scrollbar { width: 5px; }
+    .level-panel::-webkit-scrollbar-thumb { background: #2d3246; border-radius: 10px; }
+
+    .level-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+    .level-table th { 
+      position: sticky; top: 0; background: #1e2235;
+      color: #eebb4d; padding: 6px 2px; border-bottom: 1px solid #2d3246; 
+    }
+    .level-table td { padding: 5px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.5); }
+    .level-table tr:hover { background: rgba(238, 187, 77, 0.1); }
+    .level-table tr.active { background: rgba(238, 187, 77, 0.2); color: #f9f5e8; font-weight: bold; }
+
+    /* --- MENU GÓC PHẢI (GIỮ NGUYÊN) --- */
     .top-menu {
       position: absolute; top: 20px; right: 20px;
-      display: flex; align-items: center; gap: 8px; /* Tăng khoảng cách giữa các phần tử */
+      display: flex; align-items: center; gap: 8px;
       background: rgba(30, 34, 53, 0.9);
       padding: 8px 16px; border-radius: 12px;
       border: 1px solid #2d3246; z-index: 20;
     }
     .top-menu label { font-size: 14px; color: #a0a5b5; font-weight: bold; }
-    
-    .time-input-wrapper { 
-      display: flex; align-items: center; color: #eebb4d; 
-      font-size: 24px; font-weight: bold;
-    }
-
+    .time-input-wrapper { display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold; }
     .top-menu input {
       background: transparent; border: none; color: #eebb4d;
-      font-size: 24px; 
-      width: 45px; /* Tăng từ 35px lên 45px để hiện đủ số */
-      text-align: center;
-      font-weight: bold; outline: none; padding: 0 2px;
+      font-size: 24px; width: 45px; text-align: center;
+      font-weight: bold; outline: none;
     }
-    /* Ẩn mũi tên của input number */
-    .top-menu input::-webkit-inner-spin-button,
-    .top-menu input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-
     #secondBtn {
       width: auto; padding: 8px 16px; margin-left: 5px;
-      border-radius: 10px; border: none; cursor: pointer; 
-      font-weight: bold; transition: all 0.2s;
+      border-radius: 10px; border: none; cursor: pointer; font-weight: bold;
     }
 
-    /* --- GIỮ NGUYÊN GIAO DIỆN CHÍNH --- */
-    .app-container {
-      display: flex; flex-direction: column; align-items: center; width: 100%;
-    }
-    
+    /* --- MÀN HÌNH CHÍNH (GIỮ NGUYÊN) --- */
+    .app-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
     .timer-wrapper {
-      position: relative; 
-      margin-bottom: 40px; 
+      position: relative; margin-bottom: 40px; 
       display: flex; justify-content: center; align-items: baseline;
       cursor: pointer; padding: 20px; z-index: 5;
     }
-    
     #mainTimeInput {
       background: transparent; border: none; color: #f9f5e8;
       font-size: 18rem; font-weight: bold; width: 25rem;
       text-align: right; outline: none; font-family: inherit; line-height: 0.8;
     }
-
-    #mainTimeInput::-webkit-inner-spin-button, 
-    #mainTimeInput::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-
-    #msDisplay { 
-      font-size: 5rem; font-weight: 600; color: #a0a5b5; 
-      margin-left: 20px; pointer-events: none;
-    }
-
+    #mainTimeInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    #msDisplay { font-size: 5rem; font-weight: 600; color: #a0a5b5; margin-left: 20px; pointer-events: none; }
     .button-group { display: flex; gap: 15px; z-index: 10; }
     button { padding: 15px 40px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; }
-    
     .btn-start { background: #eebb4d; color: #111; }
     .btn-pause { background: #c22955; color: white; }
     .btn-reset { background: rgba(30, 34, 53, 0.8); border: 1px solid #2d3246; color: #a0a5b5; }
   </style>
 </head>
 <body>
+
+  <div class="level-panel">
+    <table class="level-table">
+      <thead>
+        <tr>
+          <th>Lvl</th>
+          <th>Small</th>
+          <th>Big</th>
+          <th>Ante</th>
+        </tr>
+      </thead>
+      <tbody id="pokerLevelsContent">
+        </tbody>
+    </table>
+  </div>
 
   <div class="top-menu">
     <label>Time</label>
@@ -95,7 +110,6 @@
       <input type="number" id="mainTimeInput" value="20" oninput="updateMainFromInput()">
       <div id="msDisplay">00</div>
     </div>
-
     <div class="button-group">
       <button id="mainBtn" class="btn-start" onclick="toggleMainTimer()">BẮT ĐẦU</button>
       <button class="btn-reset" onclick="resetMainTimer()">ĐẶT LẠI</button>
@@ -103,56 +117,57 @@
   </div>
 
   <script>
+    // DỮ LIỆU LEVEL TỪ ẢNH CỦA BẠN
+    const pokerLevels = [
+      [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60],
+      [5, 40, 80, 80], [6, 50, 100, 100], [7, 100, 200, 200], [8, 150, 300, 300],
+      [9, 200, 400, 400], [10, 300, 600, 600], [11, 400, 800, 800], [12, 500, 1000, 1000],
+      [13, 600, 1200, 1200], [14, 800, 1600, 1600], [15, 1000, 2000, 2000], [16, 1500, 3000, 3000],
+      [17, 2000, 4000, 4000], [18, 3000, 6000, 6000], [19, 4000, 8000, 8000], [20, 5000, 10000, 10000],
+      [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
+    ];
+
+    // Chèn dữ liệu vào bảng
+    const tableBody = document.getElementById('pokerLevelsContent');
+    pokerLevels.forEach(lvl => {
+      const row = document.createElement('tr');
+      row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
+      tableBody.appendChild(row);
+    });
+
+    // --- GIỮ NGUYÊN CÁC LOGIC CŨ ---
     let mainTime = 20000; 
     let mainInterval = null;
     let smallInterval = null;
     let smallRemainingMs = 0;
-
     const mainInput = document.getElementById('mainTimeInput');
     const mainArea = document.getElementById('mainTouchArea');
 
-    // Giữ nguyên logic Click để Play/Pause
     mainArea.addEventListener('click', (e) => {
-      if (mainInterval) {
-        toggleMainTimer();
-      } else {
-        if (e.target === mainInput) {
-          mainInput.focus();
-        } else {
-          toggleMainTimer();
-        }
-      }
+      if (mainInterval) { toggleMainTimer(); } 
+      else { if (e.target === mainInput) { mainInput.focus(); } else { toggleMainTimer(); } }
     });
 
     function updateMainFromInput() {
       if (mainInterval) return;
-      const val = parseInt(mainInput.value) || 0;
-      mainTime = val * 1000;
+      mainTime = (parseInt(mainInput.value) || 0) * 1000;
     }
 
     function toggleMainTimer() {
       const btn = document.getElementById('mainBtn');
       if (mainInterval) {
-        clearInterval(mainInterval);
-        mainInterval = null;
-        btn.textContent = "TIẾP TỤC";
-        btn.className = "btn-start";
+        clearInterval(mainInterval); mainInterval = null;
+        btn.textContent = "TIẾP TỤC"; btn.className = "btn-start";
         mainInput.style.pointerEvents = "auto"; 
       } else {
         if (mainTime <= 0) return;
-        btn.textContent = "TẠM DỪNG";
-        btn.className = "btn-pause";
-        mainInput.style.pointerEvents = "none";
-        mainInput.blur();
-        
+        btn.textContent = "TẠM DỪNG"; btn.className = "btn-pause";
+        mainInput.style.pointerEvents = "none"; mainInput.blur();
         mainInterval = setInterval(() => {
           mainTime -= 10;
           if (mainTime <= 0) {
-            mainTime = 0;
-            clearInterval(mainInterval);
-            mainInterval = null;
-            btn.textContent = "BẮT ĐẦU";
-            btn.className = "btn-start";
+            mainTime = 0; clearInterval(mainInterval); mainInterval = null;
+            btn.textContent = "BẮT ĐẦU"; btn.className = "btn-start";
             mainInput.style.pointerEvents = "auto";
           }
           updateMainUI();
@@ -161,64 +176,46 @@
     }
 
     function updateMainUI() {
-      const s = Math.floor(mainTime / 1000);
-      const ms = Math.floor((mainTime % 1000) / 10);
-      mainInput.value = s;
-      document.getElementById('msDisplay').textContent = ms.toString().padStart(2, '0');
+      mainInput.value = Math.floor(mainTime / 1000);
+      document.getElementById('msDisplay').textContent = Math.floor((mainTime % 1000) / 10).toString().padStart(2, '0');
     }
 
     function resetMainTimer() {
-      clearInterval(mainInterval);
-      mainInterval = null;
-      mainTime = 20000;
-      updateMainUI();
-      const btn = document.getElementById('mainBtn');
-      btn.textContent = "BẮT ĐẦU";
-      btn.className = "btn-start";
+      clearInterval(mainInterval); mainInterval = null;
+      mainTime = 20000; updateMainUI();
+      document.getElementById('mainBtn').textContent = "BẮT ĐẦU";
+      document.getElementById('mainBtn').className = "btn-start";
       mainInput.style.pointerEvents = "auto";
     }
 
-    // Giữ nguyên logic Vuốt (Swipe)
+    // Logic Swipe
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
     document.addEventListener('touchend', e => {
-      let touchEndX = e.changedTouches[0].screenX;
-      let diff = Math.abs(touchEndX - touchStartX);
-      if (diff > 100) {
-        resetMainTimer();
-        toggleMainTimer();
+      if (Math.abs(e.changedTouches[0].screenX - touchStartX) > 100) {
+        resetMainTimer(); toggleMainTimer();
       }
     }, false);
 
-    // Giữ nguyên logic Timer phụ
+    // Timer phụ góc phải
     function toggleSmallTimer() {
       const btn = document.getElementById('secondBtn');
       const minInp = document.getElementById('minInput');
       const secInp = document.getElementById('secInput');
-
       if (smallInterval) {
-        clearInterval(smallInterval);
-        smallInterval = null;
-        btn.textContent = "Start";
-        btn.className = "btn-start";
+        clearInterval(smallInterval); smallInterval = null;
+        btn.textContent = "Start"; btn.className = "btn-start";
         minInp.disabled = secInp.disabled = false;
         return;
       }
-
-      let m = parseInt(minInp.value) || 0;
-      let s = parseInt(secInp.value) || 0;
-      smallRemainingMs = (m * 60 + s) * 1000;
+      smallRemainingMs = ((parseInt(minInp.value) || 0) * 60 + (parseInt(secInp.value) || 0)) * 1000;
       if (smallRemainingMs <= 0) return;
-
       minInp.disabled = secInp.disabled = true;
-      btn.textContent = "Stop";
-      btn.className = "btn-pause";
-
+      btn.textContent = "Stop"; btn.className = "btn-pause";
       smallInterval = setInterval(() => {
         smallRemainingMs -= 100;
         if (smallRemainingMs <= 0) {
-          clearInterval(smallInterval);
-          smallInterval = null;
+          clearInterval(smallInterval); smallInterval = null;
           minInp.value = "00"; secInp.value = "00";
           btn.textContent = "Start"; btn.className = "btn-start";
           minInp.disabled = secInp.disabled = false;
