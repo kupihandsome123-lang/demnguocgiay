@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Poker Master</title>
+  <title>Countdown Pro Max - Poker Master UI</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -30,15 +30,21 @@
       position: sticky; top: 0; background: #1e2235;
       color: #eebb4d; padding: 8px 2px; border-bottom: 1px solid #2d3246; 
     }
-    .level-table td { padding: 8px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.3); }
+    .level-table td { padding: 8px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.3); transition: all 0.2s; }
     
     .break-row td { color: #4db8ff !important; font-style: italic; }
 
-    /* Highlight Level/Break đang chọn */
+    /* CẬP NHẬT: Highlight Level đang chọn */
     .level-table tr.active-level { 
-      background: rgba(238, 187, 77, 0.2); 
+      background: rgba(238, 187, 77, 0.25); 
       outline: 2px solid #eebb4d;
-      color: #f9f5e8; font-weight: bold; 
+    }
+
+    /* Đổi số sang màu trắng và bold khi dòng được chọn */
+    .level-table tr.active-level td {
+      color: #ffffff !important; /* Màu trắng tuyệt đối */
+      font-weight: 800;          /* Bold cực đậm */
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* Hiệu ứng sáng nhẹ cho chữ trắng */
     }
 
     /* --- MENU GÓC PHẢI --- */
@@ -133,25 +139,20 @@
       ["BK", "Break", "Time", "-"], 
       [6, 50, 100, 100], [7, 100, 200, 200], [8, 150, 300, 300], [9, 200, 400, 400], [10, 300, 600, 600],
       ["BK", "Break", "Time", "-"],
-      [11, 400, 800, 800], [12, 500, 1000, 1000], [13, 600, 1200, 1200], [14, 800, 1600, 1600], [15, 1000, 2000, 2000],
-      ["BK", "Break", "Time", "-"],
+      [11, 400, 800, 800], [12, 500, 1000, 1000], [13, 600, 1200, 1200], [14, 800, 1600, 1600], [15, 1000, 2000, 2000], 
       [16, 1500, 3000, 3000], [17, 2000, 4000, 4000], [18, 3000, 6000, 6000], [19, 4000, 8000, 8000], 
-      [20, 5000, 10000, 10000],
-      ["BK", "Break", "Time", "-"],
-      [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
+      [20, 5000, 10000, 10000], [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
     ];
 
     let currentLevelIndex = 0;
     const tableBody = document.getElementById('pokerLevelsContent');
 
-    // Khởi tạo bảng với sự kiện Double Click
     pokerLevels.forEach((lvl, index) => {
       const row = document.createElement('tr');
       row.id = `level-row-${index}`;
       if (lvl[0] === "BK") row.className = "break-row";
       row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
       
-      // SỰ KIỆN DOUBLE CLICK: Chọn level khi nhấn đúp
       row.addEventListener('dblclick', () => {
         currentLevelIndex = index;
         updateLevelHighlight();
@@ -160,14 +161,12 @@
       tableBody.appendChild(row);
     });
 
-    // Khi gõ trực tiếp vào ô Level ở menu
     function manualLevelEntry() {
       const inputVal = document.getElementById('levelDisplay').value.toUpperCase();
-      // Tìm vị trí đầu tiên trong mảng khớp với giá trị nhập vào
       const foundIndex = pokerLevels.findIndex(lvl => lvl[0].toString() === inputVal);
       if (foundIndex !== -1) {
         currentLevelIndex = foundIndex;
-        updateLevelHighlight(false); // Cập nhật highlight nhưng không ghi đè giá trị đang gõ
+        updateLevelHighlight(false);
       }
     }
 
@@ -227,7 +226,6 @@
       }, 100);
     }
 
-    // --- LOGIC CHÍNH GIỮ NGUYÊN ---
     document.getElementById('mainTouchArea').addEventListener('click', (e) => {
       if (mainInterval) toggleMainTimer();
       else { if (e.target === mainInput) mainInput.focus(); else toggleMainTimer(); }
