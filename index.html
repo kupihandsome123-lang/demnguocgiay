@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Poker Auto Level</title>
+  <title>Countdown Pro Max - Poker with Break Time</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -12,14 +12,14 @@
       color: white; overflow: hidden; touch-action: none;
     }
 
-    /* --- BẢNG LEVEL POKER GÓC TRÁI --- */
+    /* --- BẢNG LEVEL POKER --- */
     .level-panel {
       position: absolute; top: 20px; left: 20px;
       background: rgba(30, 34, 53, 0.85);
       padding: 10px; border-radius: 12px;
       border: 1px solid #2d3246; z-index: 30;
-      max-height: 400px; overflow-y: auto;
-      width: 240px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-height: 450px; overflow-y: auto;
+      width: 260px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
     
     .level-panel::-webkit-scrollbar { width: 5px; }
@@ -32,15 +32,17 @@
     }
     .level-table td { padding: 8px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.3); }
     
-    /* Highlight Level đang chọn với Border vàng */
+    /* Style cho dòng Break Time */
+    .break-row td { color: #4db8ff !important; font-style: italic; }
+
+    /* Highlight Level/Break đang chọn */
     .level-table tr.active-level { 
       background: rgba(238, 187, 77, 0.2); 
-      outline: 2px solid #eebb4d; /* Border vàng nổi bật */
+      outline: 2px solid #eebb4d;
       color: #f9f5e8; font-weight: bold; 
     }
-    .level-table tr.active-level td { color: #f9f5e8; }
 
-    /* --- MENU GÓC PHẢI (CẬP NHẬT LEVEL INPUT) --- */
+    /* --- MENU GÓC PHẢI --- */
     .top-menu {
       position: absolute; top: 20px; right: 20px;
       display: flex; align-items: center; gap: 12px;
@@ -49,7 +51,7 @@
       border: 1px solid #2d3246; z-index: 20;
     }
     .top-menu .group { display: flex; align-items: center; gap: 5px; }
-    .top-menu label { font-size: 13px; color: #a0a5b5; font-weight: bold; text-transform: uppercase; }
+    .top-menu label { font-size: 13px; color: #a0a5b5; font-weight: bold; }
     
     .time-input-wrapper { display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold; }
     
@@ -58,12 +60,10 @@
       font-size: 20px; width: 45px; text-align: center;
       font-weight: bold; outline: none; border-radius: 6px;
     }
-    #levelInput { width: 50px; color: #ffffff; border-color: #4a5068; }
+    /* Level input giờ sẽ hiển thị Text (để hiện BK) */
+    #levelDisplay { width: 60px; color: #ffffff; border-color: #4a5068; }
 
-    #secondBtn {
-      width: auto; padding: 8px 20px;
-      border-radius: 10px; border: none; cursor: pointer; font-weight: bold;
-    }
+    #secondBtn { width: auto; padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
 
     /* --- MÀN HÌNH CHÍNH --- */
     .app-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
@@ -77,7 +77,6 @@
       font-size: 18rem; font-weight: bold; width: 25rem;
       text-align: right; outline: none; font-family: inherit; line-height: 0.8;
     }
-    #mainTimeInput::-webkit-inner-spin-button { -webkit-appearance: none; }
     #msDisplay { font-size: 5rem; font-weight: 600; color: #a0a5b5; margin-left: 20px; pointer-events: none; }
     
     .button-group { display: flex; gap: 15px; z-index: 10; }
@@ -106,7 +105,7 @@
   <div class="top-menu">
     <div class="group">
       <label>Level</label>
-      <input type="number" id="levelInput" value="1" min="1" max="22" oninput="updateLevelHighlight()">
+      <input type="text" id="levelDisplay" value="1" readonly>
     </div>
     <div class="group">
       <label>Time</label>
@@ -131,72 +130,75 @@
   </div>
 
   <script>
+    // Dữ liệu đã sửa lỗi cú pháp và thêm Break Time
     const pokerLevels = [
-      [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60],
-      [5, 40, 80, 80],["BK","Break time","Break time","Break time"] [6, 50, 100, 100], [7, 100, 200, 200], [8, 150, 300, 300],
-      [9, 200, 400, 400], [10, 300, 600, 600], ["BK","Break time","Break time","Break time"],[11, 400, 800, 800], [12, 500, 1000, 1000],
-      [13, 600, 1200, 1200], [14, 800, 1600, 1600], [15, 1000, 2000, 2000], [16, 1500, 3000, 3000],
-      [17, 2000, 4000, 4000], [18, 3000, 6000, 6000], [19, 4000, 8000, 8000], [20, 5000, 10000, 10000],
-      [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
+      [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60], [5, 40, 80, 80],
+      ["BK", "Break", "Time", "-"], 
+      [6, 50, 100, 100], [7, 100, 200, 200], [8, 150, 300, 300], [9, 200, 400, 400], [10, 300, 600, 600],
+      ["BK", "Break", "Time", "-"],
+      [11, 400, 800, 800], [12, 500, 1000, 1000], [13, 600, 1200, 1200], [14, 800, 1600, 1600], [15, 1000, 2000, 2000], 
+      [16, 1500, 3000, 3000], [17, 2000, 4000, 4000], [18, 3000, 6000, 6000], [19, 4000, 8000, 8000], 
+      [20, 5000, 10000, 10000], [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
     ];
 
-    // Khởi tạo bảng level
+    let currentLevelIndex = 0; // Theo dõi dựa trên vị trí mảng
     const tableBody = document.getElementById('pokerLevelsContent');
-    pokerLevels.forEach(lvl => {
+
+    // Khởi tạo bảng
+    pokerLevels.forEach((lvl, index) => {
       const row = document.createElement('tr');
-      row.id = `level-row-${lvl[0]}`;
+      row.id = `level-row-${index}`; // Dùng index để ID không bao giờ trùng
+      if (lvl[0] === "BK") row.className = "break-row";
       row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
       tableBody.appendChild(row);
     });
 
     function updateLevelHighlight() {
-      const lvl = parseInt(document.getElementById('levelInput').value);
       document.querySelectorAll('.level-table tr').forEach(tr => tr.classList.remove('active-level'));
-      const activeRow = document.getElementById(`level-row-${lvl}`);
+      const activeRow = document.getElementById(`level-row-${currentLevelIndex}`);
       if (activeRow) {
         activeRow.classList.add('active-level');
         activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Cập nhật hiển thị lên ô Level ở Menu
+        document.getElementById('levelDisplay').value = pokerLevels[currentLevelIndex][0];
       }
     }
 
     let mainTime = 20000, mainInterval = null, smallInterval = null, smallRemainingMs = 0;
     const mainInput = document.getElementById('mainTimeInput');
 
-    // Timer phụ góc phải (Tự động tăng level)
     function toggleSmallTimer() {
       const btn = document.getElementById('secondBtn');
       const minInp = document.getElementById('minInput'), secInp = document.getElementById('secInput');
-      const lvlInp = document.getElementById('levelInput');
 
       if (smallInterval) {
         clearInterval(smallInterval); smallInterval = null;
         btn.textContent = "Start"; btn.className = "btn-start";
-        minInp.disabled = secInp.disabled = lvlInp.disabled = false;
+        minInp.disabled = secInp.disabled = false;
         return;
       }
 
       const initialMs = ((parseInt(minInp.value) || 0) * 60 + (parseInt(secInp.value) || 0)) * 1000;
       smallRemainingMs = initialMs;
-      if (smallRemainingMs <= 0) return alert("Nhập thời gian đếm ngược level!");
+      if (smallRemainingMs <= 0) return alert("Nhập thời gian!");
 
-      minInp.disabled = secInp.disabled = lvlInp.disabled = true;
+      minInp.disabled = secInp.disabled = true;
       btn.textContent = "Stop"; btn.className = "btn-pause";
       updateLevelHighlight();
 
       smallInterval = setInterval(() => {
         smallRemainingMs -= 100;
         if (smallRemainingMs <= 0) {
-          // Hết giờ -> Tăng Level + Reset Timer
-          let currentLvl = parseInt(lvlInp.value);
-          if (currentLvl < 22) {
-            lvlInp.value = currentLvl + 1;
+          // CHUYỂN SANG DÒNG TIẾP THEO TRONG MẢNG
+          if (currentLevelIndex < pokerLevels.length - 1) {
+            currentLevelIndex++;
             updateLevelHighlight();
-            smallRemainingMs = initialMs; // Tự động Reset và đếm tiếp
+            smallRemainingMs = initialMs; 
           } else {
             clearInterval(smallInterval); smallInterval = null;
             btn.textContent = "Start"; btn.className = "btn-start";
-            minInp.disabled = secInp.disabled = lvlInp.disabled = false;
-            alert("Đã đạt Level tối đa!");
+            minInp.disabled = secInp.disabled = false;
+            alert("Kết thúc giải đấu!");
           }
         } else {
           let totalSec = Math.ceil(smallRemainingMs / 1000);
@@ -206,14 +208,12 @@
       }, 100);
     }
 
-    // --- CÁC LOGIC KHÁC GIỮ NGUYÊN ---
+    // --- CÁC LOGIC CŨ (GIỮ NGUYÊN) ---
     document.getElementById('mainTouchArea').addEventListener('click', (e) => {
       if (mainInterval) toggleMainTimer();
       else { if (e.target === mainInput) mainInput.focus(); else toggleMainTimer(); }
     });
-
     function updateMainFromInput() { if (!mainInterval) mainTime = (parseInt(mainInput.value) || 0) * 1000; }
-
     function toggleMainTimer() {
       const btn = document.getElementById('mainBtn');
       if (mainInterval) {
@@ -231,12 +231,10 @@
         }, 10);
       }
     }
-
     function updateMainUI() {
       mainInput.value = Math.floor(mainTime / 1000);
       document.getElementById('msDisplay').textContent = Math.floor((mainTime % 1000) / 10).toString().padStart(2, '0');
     }
-
     function resetMainTimer() {
       clearInterval(mainInterval); mainInterval = null;
       mainTime = 20000; updateMainUI();
@@ -244,7 +242,6 @@
       document.getElementById('mainBtn').className = "btn-start";
       mainInput.style.pointerEvents = "auto";
     }
-
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
     document.addEventListener('touchend', e => {
