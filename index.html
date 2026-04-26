@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - No Circle</title>
+  <title>Countdown Pro Max - Big Numbers & Input</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -12,63 +12,69 @@
       color: white; overflow: hidden; touch-action: none;
     }
     
-    /* Menu góc phải - Bộ đếm phụ */
+    /* Menu góc phải */
     .top-menu {
       position: absolute; top: 20px; right: 20px;
       display: flex; align-items: center; gap: 4px;
       background: rgba(30, 34, 53, 0.8);
       padding: 6px 12px; border-radius: 12px;
-      border: 1px solid #2d3246;
-      z-index: 10;
+      border: 1px solid #2d3246; z-index: 10;
     }
     .top-menu label { font-size: 14px; color: #a0a5b5; font-weight: bold; margin-right: 4px; }
-    
-    .time-input-wrapper {
-      display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold;
-    }
-
+    .time-input-wrapper { display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold; }
     .top-menu input {
       background: transparent; border: none; color: #eebb4d;
       font-size: 24px; width: 35px; text-align: center;
       font-weight: bold; outline: none; padding: 0;
     }
-
     #secondBtn {
-      width: auto; min-width: fit-content;
-      padding: 8px 16px; margin-left: 10px;
-      height: auto; font-size: 0.9rem;
-      border-radius: 10px; flex: none;
+      width: auto; padding: 8px 16px; margin-left: 10px;
+      height: auto; font-size: 0.9rem; border-radius: 10px;
       border: none; cursor: pointer; font-weight: bold; transition: all 0.2s;
     }
 
-    /* Màn hình chính ở giữa - Đã loại bỏ vòng tròn */
+    /* Màn hình chính */
     .app-container {
-      display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 500px;
+      display: flex; flex-direction: column; align-items: center; width: 100%;
     }
     
     .timer-wrapper {
       position: relative; 
-      width: 454px; 
-      height: 400px; /* Giảm chiều cao vì không còn vòng tròn */
-      margin-bottom: 20px; 
-      display: flex; justify-content: center; align-items: center;
+      margin-bottom: 40px; 
+      display: flex; justify-content: center; align-items: baseline;
       cursor: pointer;
     }
     
-    .timer-text {
-      display: flex; justify-content: center; align-items: center;
-      color: #f9f5e8; pointer-events: none;
+    /* Ô nhập liệu ẩn cho bộ đếm chính */
+    #mainTimeInput {
+      position: absolute;
+      opacity: 0;
+      width: 100%;
+      height: 100%;
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    #secDisplay { 
+      font-size: 18rem; /* Rất to */
+      font-weight: bold; 
+      line-height: 0.8; 
+      color: #f9f5e8;
     }
     
-    #secDisplay { font-size: 16rem; font-weight: bold; line-height: 1; }
-    #msDisplay { font-size: 5rem; font-weight: 600; color: #a0a5b5; margin-left: 12px; transform: translateY(25px); }
+    #msDisplay { 
+      font-size: 5rem; 
+      font-weight: 600; 
+      color: #a0a5b5; 
+      margin-left: 20px;
+    }
 
-    .button-group { display: flex; gap: 15px; width: 80%; justify-content: center; }
-    button { padding: 18px 30px; border: none; border-radius: 14px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; }
+    .button-group { display: flex; gap: 15px; }
+    button { padding: 15px 40px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; }
     
-    .btn-start { background: linear-gradient(135deg, #f5c453, #d99e32); color: #111; }
+    .btn-start { background: #eebb4d; color: #111; }
     .btn-pause { background: #c22955; color: white; }
-    .btn-reset { background-color: #1e2235; border: 1px solid #2d3246; }
+    .btn-reset { background: rgba(30, 34, 53, 0.8); border: 1px solid #2d3246; color: #a0a5b5; }
   </style>
 </head>
 <body>
@@ -76,23 +82,19 @@
   <div class="top-menu">
     <label>Time</label>
     <div class="time-input-wrapper">
-      <input type="number" id="minInput" value="00" min="0" max="99" 
-             oninput="this.value = this.value.slice(0,2)"
-             onblur="this.value = this.value.padStart(2, '0')">
+      <input type="number" id="minInput" value="00" min="0" max="99" oninput="this.value = this.value.slice(0,2)" onblur="this.value = this.value.padStart(2, '0')">
       <span>:</span>
-      <input type="number" id="secInput" value="10" min="0" max="59" 
-             oninput="this.value = this.value.slice(0,2)"
-             onblur="this.value = this.value.padStart(2, '0')">
+      <input type="number" id="secInput" value="10" min="0" max="59" oninput="this.value = this.value.slice(0,2)" onblur="this.value = this.value.padStart(2, '0')">
     </div>
     <button id="secondBtn" onclick="toggleSmallTimer()" class="btn-start">Start</button>
   </div>
 
   <div class="app-container">
-    <div class="timer-wrapper" onclick="toggleMainTimer()">
-      <div class="timer-text">
-        <span id="secDisplay">20</span>
-        <span id="msDisplay">00</span>
-      </div>
+    <div class="timer-wrapper">
+      <input type="number" id="mainTimeInput" value="20" oninput="updateMainFromInput()">
+      
+      <div id="secDisplay">20</div>
+      <div id="msDisplay">00</div>
     </div>
 
     <div class="button-group">
@@ -102,15 +104,21 @@
   </div>
 
   <script>
-    // Logic Bộ đếm chính (Ở giữa)
     let mainTime = 20000; 
     let mainInterval = null;
-
-    // Logic Bộ đếm phụ (Góc phải)
     let smallInterval = null;
     let smallRemainingMs = 0;
 
-    // --- XỬ LÝ BỘ ĐẾM PHỤ (GÓC PHẢI) ---
+    // Cập nhật thời gian chính khi bạn gõ vào số ở giữa
+    function updateMainFromInput() {
+      if (mainInterval) return; // Không cho sửa khi đang chạy
+      const val = parseInt(document.getElementById('mainTimeInput').value) || 0;
+      mainTime = val * 1000;
+      document.getElementById('secDisplay').textContent = val.toString().padStart(2, '0');
+      document.getElementById('msDisplay').textContent = "00";
+    }
+
+    // Bộ đếm phụ góc phải
     function toggleSmallTimer() {
       const btn = document.getElementById('secondBtn');
       const minInp = document.getElementById('minInput');
@@ -128,7 +136,6 @@
       let m = parseInt(minInp.value) || 0;
       let s = parseInt(secInp.value) || 0;
       smallRemainingMs = (m * 60 + s) * 1000;
-
       if (smallRemainingMs <= 0) return;
 
       minInp.disabled = secInp.disabled = true;
@@ -152,17 +159,23 @@
       }, 100);
     }
 
-    // --- XỬ LÝ BỘ ĐẾM CHÍNH (Ở GIỮA) ---
+    // Bộ đếm chính ở giữa
     function toggleMainTimer() {
       const btn = document.getElementById('mainBtn');
+      const input = document.getElementById('mainTimeInput');
+
       if (mainInterval) {
         clearInterval(mainInterval);
         mainInterval = null;
         btn.textContent = "TIẾP TỤC";
         btn.className = "btn-start";
+        input.style.display = "block"; // Hiện lại input khi dừng
       } else {
+        if (mainTime <= 0) return;
         btn.textContent = "TẠM DỪNG";
         btn.className = "btn-pause";
+        input.style.display = "none"; // Ẩn input khi đang chạy để không bấm nhầm
+        
         mainInterval = setInterval(() => {
           mainTime -= 10;
           if (mainTime <= 0) {
@@ -171,6 +184,7 @@
             mainInterval = null;
             btn.textContent = "BẮT ĐẦU";
             btn.className = "btn-start";
+            input.style.display = "block";
           }
           updateMainUI();
         }, 10);
@@ -187,13 +201,13 @@
     function resetMainTimer() {
       clearInterval(mainInterval);
       mainInterval = null;
-      mainTime = 20000;
+      const inputVal = parseInt(document.getElementById('mainTimeInput').value) || 20;
+      mainTime = inputVal * 1000;
       updateMainUI();
       document.getElementById('mainBtn').textContent = "BẮT ĐẦU";
       document.getElementById('mainBtn').className = "btn-start";
+      document.getElementById('mainTimeInput').style.display = "block";
     }
-
-    updateMainUI();
   </script>
 </body>
 </html>
