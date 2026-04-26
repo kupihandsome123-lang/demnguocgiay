@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Big Numbers & Input</title>
+  <title>Countdown Pro Max - Visible Input</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -42,31 +42,35 @@
       position: relative; 
       margin-bottom: 40px; 
       display: flex; justify-content: center; align-items: baseline;
-      cursor: pointer;
     }
     
-    /* Ô nhập liệu ẩn cho bộ đếm chính */
+    /* Ô NHẬP LIỆU CHÍNH - BIẾN THÀNH SỐ HIỂN THỊ */
     #mainTimeInput {
-      position: absolute;
-      opacity: 0;
-      width: 100%;
-      height: 100%;
-      cursor: pointer;
-      z-index: 5;
+      background: transparent;
+      border: none;
+      color: #f9f5e8;
+      font-size: 18rem;
+      font-weight: bold;
+      width: 25rem; /* Độ rộng vừa đủ cho 2-3 chữ số */
+      text-align: right;
+      outline: none;
+      font-family: inherit;
+      line-height: 0.8;
+      cursor: text;
     }
 
-    #secDisplay { 
-      font-size: 18rem; /* Rất to */
-      font-weight: bold; 
-      line-height: 0.8; 
-      color: #f9f5e8;
+    /* Xóa mũi tên tăng giảm của input number */
+    #mainTimeInput::-webkit-inner-spin-button, 
+    #mainTimeInput::-webkit-outer-spin-button { 
+      -webkit-appearance: none; margin: 0; 
     }
-    
+
     #msDisplay { 
       font-size: 5rem; 
       font-weight: 600; 
       color: #a0a5b5; 
       margin-left: 20px;
+      pointer-events: none;
     }
 
     .button-group { display: flex; gap: 15px; }
@@ -92,8 +96,6 @@
   <div class="app-container">
     <div class="timer-wrapper">
       <input type="number" id="mainTimeInput" value="20" oninput="updateMainFromInput()">
-      
-      <div id="secDisplay">20</div>
       <div id="msDisplay">00</div>
     </div>
 
@@ -109,16 +111,16 @@
     let smallInterval = null;
     let smallRemainingMs = 0;
 
-    // Cập nhật thời gian chính khi bạn gõ vào số ở giữa
+    // Cập nhật khi gõ trực tiếp vào số to
     function updateMainFromInput() {
-      if (mainInterval) return; // Không cho sửa khi đang chạy
-      const val = parseInt(document.getElementById('mainTimeInput').value) || 0;
+      if (mainInterval) return;
+      const input = document.getElementById('mainTimeInput');
+      const val = parseInt(input.value) || 0;
       mainTime = val * 1000;
-      document.getElementById('secDisplay').textContent = val.toString().padStart(2, '0');
-      document.getElementById('msDisplay').textContent = "00";
+      // Không cần cập nhật textContent vì chính nó là input
     }
 
-    // Bộ đếm phụ góc phải
+    // Timer phụ góc phải
     function toggleSmallTimer() {
       const btn = document.getElementById('secondBtn');
       const minInp = document.getElementById('minInput');
@@ -159,7 +161,7 @@
       }, 100);
     }
 
-    // Bộ đếm chính ở giữa
+    // Timer chính ở giữa
     function toggleMainTimer() {
       const btn = document.getElementById('mainBtn');
       const input = document.getElementById('mainTimeInput');
@@ -169,12 +171,12 @@
         mainInterval = null;
         btn.textContent = "TIẾP TỤC";
         btn.className = "btn-start";
-        input.style.display = "block"; // Hiện lại input khi dừng
+        input.readOnly = false; // Cho phép sửa khi dừng
       } else {
         if (mainTime <= 0) return;
         btn.textContent = "TẠM DỪNG";
         btn.className = "btn-pause";
-        input.style.display = "none"; // Ẩn input khi đang chạy để không bấm nhầm
+        input.readOnly = true; // Khóa input khi đang chạy
         
         mainInterval = setInterval(() => {
           mainTime -= 10;
@@ -184,7 +186,7 @@
             mainInterval = null;
             btn.textContent = "BẮT ĐẦU";
             btn.className = "btn-start";
-            input.style.display = "block";
+            input.readOnly = false;
           }
           updateMainUI();
         }, 10);
@@ -192,21 +194,24 @@
     }
 
     function updateMainUI() {
+      const input = document.getElementById('mainTimeInput');
       const s = Math.floor(mainTime / 1000);
       const ms = Math.floor((mainTime % 1000) / 10);
-      document.getElementById('secDisplay').textContent = s.toString().padStart(2, '0');
+      
+      input.value = s; // Cập nhật giá trị số giây vào input
       document.getElementById('msDisplay').textContent = ms.toString().padStart(2, '0');
     }
 
     function resetMainTimer() {
       clearInterval(mainInterval);
       mainInterval = null;
-      const inputVal = parseInt(document.getElementById('mainTimeInput').value) || 20;
-      mainTime = inputVal * 1000;
-      updateMainUI();
+      const input = document.getElementById('mainTimeInput');
+      input.value = 20; 
+      mainTime = 20000;
+      input.readOnly = false;
+      document.getElementById('msDisplay').textContent = "00";
       document.getElementById('mainBtn').textContent = "BẮT ĐẦU";
       document.getElementById('mainBtn').className = "btn-start";
-      document.getElementById('mainTimeInput').style.display = "block";
     }
   </script>
 </body>
