@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Poker Master UI</title>
+  <title>Countdown Pro Max - Poker Master Security</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -34,17 +34,16 @@
     
     .break-row td { color: #4db8ff !important; font-style: italic; }
 
-    /* CẬP NHẬT: Highlight Level đang chọn */
+    /* Highlight Level đang chọn */
     .level-table tr.active-level { 
       background: rgba(238, 187, 77, 0.25); 
       outline: 2px solid #eebb4d;
     }
 
-    /* Đổi số sang màu trắng và bold khi dòng được chọn */
     .level-table tr.active-level td {
-      color: #ffffff !important; /* Màu trắng tuyệt đối */
-      font-weight: 800;          /* Bold cực đậm */
-      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* Hiệu ứng sáng nhẹ cho chữ trắng */
+      color: #ffffff !important;
+      font-weight: 800;
+      text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
     }
 
     /* --- MENU GÓC PHẢI --- */
@@ -134,6 +133,13 @@
   </div>
 
   <script>
+    // --- CHỨC NĂNG CHỐNG LOAD LẠI TRANG (MỚI THÊM) ---
+    window.addEventListener('beforeunload', function (e) {
+        // Thông báo chuẩn của trình duyệt sẽ hiển thị
+        e.preventDefault();
+        e.returnValue = ''; // Bắt buộc để kích hoạt popup trên Chrome/Edge
+    });
+
     const pokerLevels = [
       [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60], [5, 40, 80, 80],
       ["BK", "Break", "Time", "-"], 
@@ -152,12 +158,10 @@
       row.id = `level-row-${index}`;
       if (lvl[0] === "BK") row.className = "break-row";
       row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
-      
       row.addEventListener('dblclick', () => {
         currentLevelIndex = index;
         updateLevelHighlight();
       });
-
       tableBody.appendChild(row);
     });
 
