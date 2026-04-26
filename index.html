@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Poker with Break Time</title>
+  <title>Countdown Pro Max - Poker Master</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -25,14 +25,13 @@
     .level-panel::-webkit-scrollbar { width: 5px; }
     .level-panel::-webkit-scrollbar-thumb { background: #2d3246; border-radius: 10px; }
 
-    .level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
+    .level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; cursor: pointer; }
     .level-table th { 
       position: sticky; top: 0; background: #1e2235;
       color: #eebb4d; padding: 8px 2px; border-bottom: 1px solid #2d3246; 
     }
     .level-table td { padding: 8px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.3); }
     
-    /* Style cho dòng Break Time */
     .break-row td { color: #4db8ff !important; font-style: italic; }
 
     /* Highlight Level/Break đang chọn */
@@ -51,17 +50,16 @@
       border: 1px solid #2d3246; z-index: 20;
     }
     .top-menu .group { display: flex; align-items: center; gap: 5px; }
-    .top-menu label { font-size: 13px; color: #a0a5b5; font-weight: bold; }
+    .top-menu label { font-size: 12px; color: #a0a5b5; font-weight: bold; text-transform: uppercase; }
     
     .time-input-wrapper { display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold; }
     
     .top-menu input {
-      background: rgba(0,0,0,0.2); border: 1px solid #2d3246; color: #eebb4d;
-      font-size: 20px; width: 45px; text-align: center;
-      font-weight: bold; outline: none; border-radius: 6px;
+      background: rgba(0,0,0,0.3); border: 1px solid #4a5068; color: #eebb4d;
+      font-size: 20px; width: 50px; text-align: center;
+      font-weight: bold; outline: none; border-radius: 6px; padding: 2px;
     }
-    /* Level input giờ sẽ hiển thị Text (để hiện BK) */
-    #levelDisplay { width: 60px; color: #ffffff; border-color: #4a5068; }
+    #levelDisplay { color: #ffffff; border-color: #eebb4d; }
 
     #secondBtn { width: auto; padding: 8px 20px; border-radius: 10px; border: none; cursor: pointer; font-weight: bold; }
 
@@ -105,7 +103,7 @@
   <div class="top-menu">
     <div class="group">
       <label>Level</label>
-      <input type="text" id="levelDisplay" value="1" readonly>
+      <input type="text" id="levelDisplay" value="1" oninput="manualLevelEntry()">
     </div>
     <div class="group">
       <label>Time</label>
@@ -130,7 +128,6 @@
   </div>
 
   <script>
-    // Dữ liệu đã sửa lỗi cú pháp và thêm Break Time
     const pokerLevels = [
       [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60], [5, 40, 80, 80],
       ["BK", "Break", "Time", "-"], 
@@ -141,26 +138,45 @@
       [20, 5000, 10000, 10000], [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
     ];
 
-    let currentLevelIndex = 0; // Theo dõi dựa trên vị trí mảng
+    let currentLevelIndex = 0;
     const tableBody = document.getElementById('pokerLevelsContent');
 
-    // Khởi tạo bảng
+    // Khởi tạo bảng với sự kiện Double Click
     pokerLevels.forEach((lvl, index) => {
       const row = document.createElement('tr');
-      row.id = `level-row-${index}`; // Dùng index để ID không bao giờ trùng
+      row.id = `level-row-${index}`;
       if (lvl[0] === "BK") row.className = "break-row";
       row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
+      
+      // SỰ KIỆN DOUBLE CLICK: Chọn level khi nhấn đúp
+      row.addEventListener('dblclick', () => {
+        currentLevelIndex = index;
+        updateLevelHighlight();
+      });
+
       tableBody.appendChild(row);
     });
 
-    function updateLevelHighlight() {
+    // Khi gõ trực tiếp vào ô Level ở menu
+    function manualLevelEntry() {
+      const inputVal = document.getElementById('levelDisplay').value.toUpperCase();
+      // Tìm vị trí đầu tiên trong mảng khớp với giá trị nhập vào
+      const foundIndex = pokerLevels.findIndex(lvl => lvl[0].toString() === inputVal);
+      if (foundIndex !== -1) {
+        currentLevelIndex = foundIndex;
+        updateLevelHighlight(false); // Cập nhật highlight nhưng không ghi đè giá trị đang gõ
+      }
+    }
+
+    function updateLevelHighlight(updateInput = true) {
       document.querySelectorAll('.level-table tr').forEach(tr => tr.classList.remove('active-level'));
       const activeRow = document.getElementById(`level-row-${currentLevelIndex}`);
       if (activeRow) {
         activeRow.classList.add('active-level');
         activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Cập nhật hiển thị lên ô Level ở Menu
-        document.getElementById('levelDisplay').value = pokerLevels[currentLevelIndex][0];
+        if (updateInput) {
+          document.getElementById('levelDisplay').value = pokerLevels[currentLevelIndex][0];
+        }
       }
     }
 
@@ -170,11 +186,12 @@
     function toggleSmallTimer() {
       const btn = document.getElementById('secondBtn');
       const minInp = document.getElementById('minInput'), secInp = document.getElementById('secInput');
+      const lvlInp = document.getElementById('levelDisplay');
 
       if (smallInterval) {
         clearInterval(smallInterval); smallInterval = null;
         btn.textContent = "Start"; btn.className = "btn-start";
-        minInp.disabled = secInp.disabled = false;
+        minInp.disabled = secInp.disabled = lvlInp.disabled = false;
         return;
       }
 
@@ -182,14 +199,13 @@
       smallRemainingMs = initialMs;
       if (smallRemainingMs <= 0) return alert("Nhập thời gian!");
 
-      minInp.disabled = secInp.disabled = true;
+      minInp.disabled = secInp.disabled = lvlInp.disabled = true;
       btn.textContent = "Stop"; btn.className = "btn-pause";
       updateLevelHighlight();
 
       smallInterval = setInterval(() => {
         smallRemainingMs -= 100;
         if (smallRemainingMs <= 0) {
-          // CHUYỂN SANG DÒNG TIẾP THEO TRONG MẢNG
           if (currentLevelIndex < pokerLevels.length - 1) {
             currentLevelIndex++;
             updateLevelHighlight();
@@ -197,7 +213,7 @@
           } else {
             clearInterval(smallInterval); smallInterval = null;
             btn.textContent = "Start"; btn.className = "btn-start";
-            minInp.disabled = secInp.disabled = false;
+            minInp.disabled = secInp.disabled = lvlInp.disabled = false;
             alert("Kết thúc giải đấu!");
           }
         } else {
@@ -208,7 +224,7 @@
       }, 100);
     }
 
-    // --- CÁC LOGIC CŨ (GIỮ NGUYÊN) ---
+    // --- LOGIC CHÍNH GIỮ NGUYÊN ---
     document.getElementById('mainTouchArea').addEventListener('click', (e) => {
       if (mainInterval) toggleMainTimer();
       else { if (e.target === mainInput) mainInput.focus(); else toggleMainTimer(); }
