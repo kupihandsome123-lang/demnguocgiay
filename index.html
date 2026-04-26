@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Pro Max - Poker Levels</title>
+  <title>Countdown Pro Max - Poker Auto Level</title>
   <style>
     body {
       display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
@@ -12,52 +12,60 @@
       color: white; overflow: hidden; touch-action: none;
     }
 
-    /* --- BẢNG LEVEL POKER GÓC TRÊN TRÁI --- */
+    /* --- BẢNG LEVEL POKER GÓC TRÁI --- */
     .level-panel {
       position: absolute; top: 20px; left: 20px;
       background: rgba(30, 34, 53, 0.85);
       padding: 10px; border-radius: 12px;
       border: 1px solid #2d3246; z-index: 30;
-      max-height: 300px; /* Giới hạn chiều cao */
-      overflow-y: auto;  /* Cho phép cuộn */
-      width: 220px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+      max-height: 400px; overflow-y: auto;
+      width: 240px; box-shadow: 0 8px 32px rgba(0,0,0,0.3);
     }
     
-    /* Tùy chỉnh thanh cuộn cho bảng */
     .level-panel::-webkit-scrollbar { width: 5px; }
     .level-panel::-webkit-scrollbar-thumb { background: #2d3246; border-radius: 10px; }
 
-    .level-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: center; }
+    .level-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: center; }
     .level-table th { 
       position: sticky; top: 0; background: #1e2235;
-      color: #eebb4d; padding: 6px 2px; border-bottom: 1px solid #2d3246; 
+      color: #eebb4d; padding: 8px 2px; border-bottom: 1px solid #2d3246; 
     }
-    .level-table td { padding: 5px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.5); }
-    .level-table tr:hover { background: rgba(238, 187, 77, 0.1); }
-    .level-table tr.active { background: rgba(238, 187, 77, 0.2); color: #f9f5e8; font-weight: bold; }
+    .level-table td { padding: 8px 2px; color: #a0a5b5; border-bottom: 1px solid rgba(45, 50, 70, 0.3); }
+    
+    /* Highlight Level đang chọn với Border vàng */
+    .level-table tr.active-level { 
+      background: rgba(238, 187, 77, 0.2); 
+      outline: 2px solid #eebb4d; /* Border vàng nổi bật */
+      color: #f9f5e8; font-weight: bold; 
+    }
+    .level-table tr.active-level td { color: #f9f5e8; }
 
-    /* --- MENU GÓC PHẢI (GIỮ NGUYÊN) --- */
+    /* --- MENU GÓC PHẢI (CẬP NHẬT LEVEL INPUT) --- */
     .top-menu {
       position: absolute; top: 20px; right: 20px;
-      display: flex; align-items: center; gap: 8px;
+      display: flex; align-items: center; gap: 12px;
       background: rgba(30, 34, 53, 0.9);
       padding: 8px 16px; border-radius: 12px;
       border: 1px solid #2d3246; z-index: 20;
     }
-    .top-menu label { font-size: 14px; color: #a0a5b5; font-weight: bold; }
+    .top-menu .group { display: flex; align-items: center; gap: 5px; }
+    .top-menu label { font-size: 13px; color: #a0a5b5; font-weight: bold; text-transform: uppercase; }
+    
     .time-input-wrapper { display: flex; align-items: center; color: #eebb4d; font-size: 24px; font-weight: bold; }
+    
     .top-menu input {
-      background: transparent; border: none; color: #eebb4d;
-      font-size: 24px; width: 45px; text-align: center;
-      font-weight: bold; outline: none;
+      background: rgba(0,0,0,0.2); border: 1px solid #2d3246; color: #eebb4d;
+      font-size: 20px; width: 45px; text-align: center;
+      font-weight: bold; outline: none; border-radius: 6px;
     }
+    #levelInput { width: 50px; color: #ffffff; border-color: #4a5068; }
+
     #secondBtn {
-      width: auto; padding: 8px 16px; margin-left: 5px;
+      width: auto; padding: 8px 20px;
       border-radius: 10px; border: none; cursor: pointer; font-weight: bold;
     }
 
-    /* --- MÀN HÌNH CHÍNH (GIỮ NGUYÊN) --- */
+    /* --- MÀN HÌNH CHÍNH --- */
     .app-container { display: flex; flex-direction: column; align-items: center; width: 100%; }
     .timer-wrapper {
       position: relative; margin-bottom: 40px; 
@@ -69,8 +77,9 @@
       font-size: 18rem; font-weight: bold; width: 25rem;
       text-align: right; outline: none; font-family: inherit; line-height: 0.8;
     }
-    #mainTimeInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+    #mainTimeInput::-webkit-inner-spin-button { -webkit-appearance: none; }
     #msDisplay { font-size: 5rem; font-weight: 600; color: #a0a5b5; margin-left: 20px; pointer-events: none; }
+    
     .button-group { display: flex; gap: 15px; z-index: 10; }
     button { padding: 15px 40px; border: none; border-radius: 12px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: all 0.2s; color: white; }
     .btn-start { background: #eebb4d; color: #111; }
@@ -90,17 +99,22 @@
           <th>Ante</th>
         </tr>
       </thead>
-      <tbody id="pokerLevelsContent">
-        </tbody>
+      <tbody id="pokerLevelsContent"></tbody>
     </table>
   </div>
 
   <div class="top-menu">
-    <label>Time</label>
-    <div class="time-input-wrapper">
-      <input type="number" id="minInput" value="00" oninput="this.value = this.value.slice(0,2)" onblur="this.value = this.value.padStart(2, '0')">
-      <span>:</span>
-      <input type="number" id="secInput" value="10" oninput="this.value = this.value.slice(0,2)" onblur="this.value = this.value.padStart(2, '0')">
+    <div class="group">
+      <label>Level</label>
+      <input type="number" id="levelInput" value="1" min="1" max="22" oninput="updateLevelHighlight()">
+    </div>
+    <div class="group">
+      <label>Time</label>
+      <div class="time-input-wrapper">
+        <input type="number" id="minInput" value="00" oninput="this.value = this.value.slice(0,2)">
+        <span>:</span>
+        <input type="number" id="secInput" value="10" oninput="this.value = this.value.slice(0,2)">
+      </div>
     </div>
     <button id="secondBtn" onclick="toggleSmallTimer()" class="btn-start">Start</button>
   </div>
@@ -117,7 +131,6 @@
   </div>
 
   <script>
-    // DỮ LIỆU LEVEL TỪ ẢNH CỦA BẠN
     const pokerLevels = [
       [1, 10, 10, 10], [2, 10, 20, 20], [3, 20, 40, 40], [4, 30, 60, 60],
       [5, 40, 80, 80], [6, 50, 100, 100], [7, 100, 200, 200], [8, 150, 300, 300],
@@ -127,31 +140,79 @@
       [21, 6000, 12000, 12000], [22, 8000, 16000, 16000]
     ];
 
-    // Chèn dữ liệu vào bảng
+    // Khởi tạo bảng level
     const tableBody = document.getElementById('pokerLevelsContent');
     pokerLevels.forEach(lvl => {
       const row = document.createElement('tr');
+      row.id = `level-row-${lvl[0]}`;
       row.innerHTML = `<td>${lvl[0]}</td><td>${lvl[1]}</td><td>${lvl[2]}</td><td>${lvl[3]}</td>`;
       tableBody.appendChild(row);
     });
 
-    // --- GIỮ NGUYÊN CÁC LOGIC CŨ ---
-    let mainTime = 20000; 
-    let mainInterval = null;
-    let smallInterval = null;
-    let smallRemainingMs = 0;
-    const mainInput = document.getElementById('mainTimeInput');
-    const mainArea = document.getElementById('mainTouchArea');
+    function updateLevelHighlight() {
+      const lvl = parseInt(document.getElementById('levelInput').value);
+      document.querySelectorAll('.level-table tr').forEach(tr => tr.classList.remove('active-level'));
+      const activeRow = document.getElementById(`level-row-${lvl}`);
+      if (activeRow) {
+        activeRow.classList.add('active-level');
+        activeRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
 
-    mainArea.addEventListener('click', (e) => {
-      if (mainInterval) { toggleMainTimer(); } 
-      else { if (e.target === mainInput) { mainInput.focus(); } else { toggleMainTimer(); } }
+    let mainTime = 20000, mainInterval = null, smallInterval = null, smallRemainingMs = 0;
+    const mainInput = document.getElementById('mainTimeInput');
+
+    // Timer phụ góc phải (Tự động tăng level)
+    function toggleSmallTimer() {
+      const btn = document.getElementById('secondBtn');
+      const minInp = document.getElementById('minInput'), secInp = document.getElementById('secInput');
+      const lvlInp = document.getElementById('levelInput');
+
+      if (smallInterval) {
+        clearInterval(smallInterval); smallInterval = null;
+        btn.textContent = "Start"; btn.className = "btn-start";
+        minInp.disabled = secInp.disabled = lvlInp.disabled = false;
+        return;
+      }
+
+      const initialMs = ((parseInt(minInp.value) || 0) * 60 + (parseInt(secInp.value) || 0)) * 1000;
+      smallRemainingMs = initialMs;
+      if (smallRemainingMs <= 0) return alert("Nhập thời gian đếm ngược level!");
+
+      minInp.disabled = secInp.disabled = lvlInp.disabled = true;
+      btn.textContent = "Stop"; btn.className = "btn-pause";
+      updateLevelHighlight();
+
+      smallInterval = setInterval(() => {
+        smallRemainingMs -= 100;
+        if (smallRemainingMs <= 0) {
+          // Hết giờ -> Tăng Level + Reset Timer
+          let currentLvl = parseInt(lvlInp.value);
+          if (currentLvl < 22) {
+            lvlInp.value = currentLvl + 1;
+            updateLevelHighlight();
+            smallRemainingMs = initialMs; // Tự động Reset và đếm tiếp
+          } else {
+            clearInterval(smallInterval); smallInterval = null;
+            btn.textContent = "Start"; btn.className = "btn-start";
+            minInp.disabled = secInp.disabled = lvlInp.disabled = false;
+            alert("Đã đạt Level tối đa!");
+          }
+        } else {
+          let totalSec = Math.ceil(smallRemainingMs / 1000);
+          minInp.value = Math.floor(totalSec / 60).toString().padStart(2, '0');
+          secInp.value = (totalSec % 60).toString().padStart(2, '0');
+        }
+      }, 100);
+    }
+
+    // --- CÁC LOGIC KHÁC GIỮ NGUYÊN ---
+    document.getElementById('mainTouchArea').addEventListener('click', (e) => {
+      if (mainInterval) toggleMainTimer();
+      else { if (e.target === mainInput) mainInput.focus(); else toggleMainTimer(); }
     });
 
-    function updateMainFromInput() {
-      if (mainInterval) return;
-      mainTime = (parseInt(mainInput.value) || 0) * 1000;
-    }
+    function updateMainFromInput() { if (!mainInterval) mainTime = (parseInt(mainInput.value) || 0) * 1000; }
 
     function toggleMainTimer() {
       const btn = document.getElementById('mainBtn');
@@ -165,11 +226,7 @@
         mainInput.style.pointerEvents = "none"; mainInput.blur();
         mainInterval = setInterval(() => {
           mainTime -= 10;
-          if (mainTime <= 0) {
-            mainTime = 0; clearInterval(mainInterval); mainInterval = null;
-            btn.textContent = "BẮT ĐẦU"; btn.className = "btn-start";
-            mainInput.style.pointerEvents = "auto";
-          }
+          if (mainTime <= 0) { mainTime = 0; clearInterval(mainInterval); mainInterval = null; btn.textContent = "BẮT ĐẦU"; btn.className = "btn-start"; mainInput.style.pointerEvents = "auto"; }
           updateMainUI();
         }, 10);
       }
@@ -188,44 +245,13 @@
       mainInput.style.pointerEvents = "auto";
     }
 
-    // Logic Swipe
     let touchStartX = 0;
     document.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, false);
     document.addEventListener('touchend', e => {
-      if (Math.abs(e.changedTouches[0].screenX - touchStartX) > 100) {
-        resetMainTimer(); toggleMainTimer();
-      }
+      if (Math.abs(e.changedTouches[0].screenX - touchStartX) > 100) { resetMainTimer(); toggleMainTimer(); }
     }, false);
 
-    // Timer phụ góc phải
-    function toggleSmallTimer() {
-      const btn = document.getElementById('secondBtn');
-      const minInp = document.getElementById('minInput');
-      const secInp = document.getElementById('secInput');
-      if (smallInterval) {
-        clearInterval(smallInterval); smallInterval = null;
-        btn.textContent = "Start"; btn.className = "btn-start";
-        minInp.disabled = secInp.disabled = false;
-        return;
-      }
-      smallRemainingMs = ((parseInt(minInp.value) || 0) * 60 + (parseInt(secInp.value) || 0)) * 1000;
-      if (smallRemainingMs <= 0) return;
-      minInp.disabled = secInp.disabled = true;
-      btn.textContent = "Stop"; btn.className = "btn-pause";
-      smallInterval = setInterval(() => {
-        smallRemainingMs -= 100;
-        if (smallRemainingMs <= 0) {
-          clearInterval(smallInterval); smallInterval = null;
-          minInp.value = "00"; secInp.value = "00";
-          btn.textContent = "Start"; btn.className = "btn-start";
-          minInp.disabled = secInp.disabled = false;
-        } else {
-          let totalSec = Math.floor(smallRemainingMs / 1000);
-          minInp.value = Math.floor(totalSec / 60).toString().padStart(2, '0');
-          secInp.value = (totalSec % 60).toString().padStart(2, '0');
-        }
-      }, 100);
-    }
+    updateLevelHighlight();
   </script>
 </body>
 </html>
